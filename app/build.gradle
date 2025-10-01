@@ -1,0 +1,117 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.objectbox)
+}
+
+android {
+    compileSdk 35
+//    buildToolsVersion '35.0.0'
+    namespace 'uni.UNI2090008'
+    defaultConfig {
+        applicationId "uni.UNI2090008"
+        minSdk 26
+        targetSdkVersion 34
+        versionCode 123
+        versionName "1.2.3"
+        multiDexEnabled true
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_11
+            targetCompatibility JavaVersion.VERSION_11
+        }
+        kotlinOptions {
+            jvmTarget = '11'
+        }
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+    signingConfigs {
+        config {
+            keyAlias '__uni__2090008'
+            keyPassword 'QHrBXMAf'
+            storeFile file('238b2889ca3b0affc9a33dd02bb1ff0d.keystore')
+            storePassword 'QHrBXMAf'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.config
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            signingConfig signingConfigs.config
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // 开启全量优化模式
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            pseudoLocalesEnabled false
+            zipAlignEnabled true
+
+            // 指定优化级别
+            crunchPngs true
+            ndk.debugSymbolLevel = 'none'
+        }
+    }
+    aaptOptions {
+        additionalParameters '--auto-add-overlay'
+        ignoreAssetsPattern "!.svn:!.git:.*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [''])
+    implementation project(":fuckingNJIT")  
+
+//    implementation libs.androidx.activity.compose
+//    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.appcompat
+//    implementation libs.androidx.legacy.support.v4
+//    implementation libs.androidx.recyclerview
+    implementation libs.fresco
+//    implementation libs.fresco.animated.gif
+    implementation libs.glide
+    implementation libs.fastjson
+    implementation libs.androidx.webkit
+//    implementation libs.androidx.constraintlayout
+//    annotationProcessor libs.compiler
+    implementation libs.okhttp
+    implementation libs.androidx.core.ktx
+//    implementation libs.kotlin.stdlib
+    implementation libs.kotlin.reflect
+//    implementation libs.kotlinx.coroutines.core
+//    implementation libs.kotlinx.coroutines.android
+    implementation libs.xxpermissions
+    implementation libs.devicecompat
+//    implementation libs.toaster
+    implementation libs.smartupdatedemo
+    implementation libs.easywindow
+//    implementation 'com.umeng.umsdk:common:+'
+//    implementation 'com.umeng.umsdk:asms:+'
+//    implementation 'com.umeng.umsdk:union:+'
+    implementation  'com.umeng.umsdk:common:+'// 必选
+    implementation  'com.umeng.umsdk:asms:+'// 必选
+
+//implementation 'com.getkeepsafe.relinker:relinker:1.4.4'
+//implementation 'com.google.guava:guava:31.0.1-jre'
+////implementation 'org.javamoney:moneta:1.4.3'
+//implementation 'joda-time:joda-time:2.10.13'
+//implementation 'io.springfox:springfox-swagger2:2.10.5'
+
+//    implementation 'com.google.android.material:material:1.12.0'
+//    implementation 'androidx.activity:activity:1.10.1'
+//    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+
+//    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
+
+}
+

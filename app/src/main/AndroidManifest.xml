@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!--    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />-->
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.READ_LOGS" />
+<!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
+<!--    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>-->
+
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<!--    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />-->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <uses-feature android:name="android.hardware.camera" />
+
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
+
+    <application
+        android:allowBackup="true"
+        android:allowClearUserData="true"
+        android:extractNativeLibs="true"
+        android:icon="@mipmap/ic_launcher_foreground"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:supportsRtl="true"
+        android:theme="@style/main_first">
+<!--        <activity-->
+<!--            android:name=".UMSplashAdDemo"-->
+<!--            android:exported="false"/>-->
+        <activity
+            android:name=".LauncherActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc|fontScale|keyboard|smallestScreenSize|screenLayout|screenSize|uiMode"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+<!--        <activity-->
+<!--            android:name=".FakeActivity"-->
+<!--            android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc|fontScale|keyboard|smallestScreenSize|screenLayout|screenSize|uiMode"-->
+<!--            android:exported="true"-->
+<!--            android:hardwareAccelerated="true"-->
+<!--            android:launchMode="singleTask"-->
+<!--            android:permission="com.miui.securitycenter.permission.AppPermissionsEditor"-->
+<!--            android:screenOrientation="user"-->
+<!--            android:theme="@style/DCloudTheme"-->
+<!--            android:windowSoftInputMode="adjustResize"-->
+<!--            >-->
+<!--        </activity>-->
+        <meta-data
+            android:name="ScopedStorage"
+            android:value="true" />
+
+                <activity
+                    android:name="io.dcloud.PandoraEntry"
+                    android:configChanges="orientation|keyboardHidden|keyboard|navigation"
+                    android:exported="true"
+                    android:hardwareAccelerated="true"
+                    android:label="@string/app_name"
+                    android:launchMode="singleTask"
+                    android:screenOrientation="user"
+                    android:theme="@style/TranslucentTheme"
+                    android:windowSoftInputMode="adjustResize">
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MAIN" />-->
+
+        <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+        <!--            </intent-filter>-->
+                    <intent-filter>
+                        <action android:name="android.intent.action.VIEW" />
+
+                        <category android:name="android.intent.category.DEFAULT" />
+                        <category android:name="android.intent.category.BROWSABLE" />
+
+                        <data android:scheme="um.67d77c8948ac1b4f87e98e5f" />
+                    </intent-filter>
+                </activity>
+                <activity
+                    android:name="io.dcloud.PandoraEntryActivity"
+                    android:configChanges="orientation|keyboardHidden|screenSize|mcc|mnc|fontScale|keyboard|smallestScreenSize|screenLayout|screenSize|uiMode"
+                    android:exported="true"
+                    android:hardwareAccelerated="true"
+                    android:launchMode="singleTask"
+                    android:permission="com.miui.securitycenter.permission.AppPermissionsEditor"
+                    android:screenOrientation="user"
+                    android:theme="@style/DCloudTheme"
+                    android:windowSoftInputMode="adjustResize">
+                </activity>
+
+        <meta-data
+            android:name="dcloud_appkey"
+            android:value="7517a95d30bd810252a645c81e8fb5da" />
+
+<!--        <meta-data android:name="DCLOUD_AD_SPLASH" android:value="true"/>&lt;!&ndash;如果不开启开屏广告则不设置此字段或者值设置为false&ndash;&gt;-->
+<!--        <meta-data android:name="DCLOUD_STREAMAPP_CHANNEL" android:value="uni.UNI2090008|__UNI__2090008|123259110001|android" />&lt;!&ndash;为了保证广告统计的有效性，请正确设置此值&ndash;&gt;-->
+
+    </application>
+
+</manifest>

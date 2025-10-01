@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="main_first" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:ignore="NewApi">shortEdges</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+        <item name="colorPrimary">#6200EE</item>
+        <item name="colorPrimaryDark">#6200EE</item>
+        <item name="colorAccent">#6200EE</item>
+        <item name="android:windowBackground">@drawable/splash</item> ///这个是启动页的图片和app的启动页无缝衔接
+    </style>
+</resources>

@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.feifan.fuckingnjit'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+//            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 开启全量优化模式
+            debuggable false
+            jniDebuggable false
+            renderscriptDebuggable false
+            pseudoLocalesEnabled false
+            zipAlignEnabled true
+
+            // 指定优化级别
+            crunchPngs true
+            ndk.debugSymbolLevel = 'none'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+}
+
+dependencies {
+    compileOnly fileTree(include: ['*.aar'], dir: '../uniappx/libs')
+    compileOnly fileTree(include: ['*.aar'], dir: '../app/libs')
+    compileOnly fileTree(include: ['*.aar'], dir: './libs')
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+
+    compileOnly libs.androidx.core.ktx
+    compileOnly libs.kotlin.gradle.plugin
+    compileOnly libs.kotlin.reflect
+    implementation libs.jsoup
+    implementation (libs.android.loading.animation){
+        exclude group: 'pl.droidsonroids.gif', module: 'android-gif-drawable'
+    }
+    implementation(libs.objectbox.kotlin)
+}

@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/local.properties
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/.idea/
+/.kotlin/
+/app/release/
+/app/238b2889ca3b0affc9a33dd02bb1ff0d.keystore
+/app/src/main/assets/apps/__UNI__2090008/www/
