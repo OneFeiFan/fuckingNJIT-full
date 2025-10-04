@@ -107,7 +107,7 @@ open class Core {
     }
     public open fun requestOverlayWindowPermission(): UTSPromise<Boolean> {
         return UTSPromise(fun(resolve, reject){
-            Manager.getPermissionsManager().requestOverlayWindowPermission(fun(isGranted){
+            Manager.getPermissionsManager().requestOverlayWindowPermission(fun(isGranted: Boolean){
                 if (isGranted) {
                     resolve(true)
                 } else {
@@ -117,6 +117,28 @@ open class Core {
             )
         }
         )
+    }
+    public open fun checkRequestInstallPackagePermission(): Boolean {
+        return Manager.getPermissionsManager().checkRequestInstallPackagePermission()
+    }
+    public open fun requestRequestInstallPackagePermission(): UTSPromise<Boolean> {
+        return UTSPromise(fun(resolve, reject){
+            Manager.getPermissionsManager().requestRequestInstallPackagePermission(fun(isGranted: Boolean){
+                if (isGranted) {
+                    resolve(true)
+                } else {
+                    reject(false)
+                }
+            }
+            )
+        }
+        )
+    }
+    public open fun isSmartUpdate(): Boolean {
+        return Manager.getPermissionsManager().isSmartUpdate()
+    }
+    public open fun setSmartUpdate(isSmart: Boolean) {
+        Manager.getPermissionsManager().setSmartUpdate(isSmart)
     }
     public open fun setLocalCurriculums(data: String) {
         Manager.setLocalCurriculums(data)
@@ -207,6 +229,18 @@ open class CoreByJs : Core {
     }
     public open suspend fun requestOverlayWindowPermissionByJs(): Deferred<Boolean> {
         return toDeferred(this.requestOverlayWindowPermission())
+    }
+    public open fun checkRequestInstallPackagePermissionByJs(): Boolean {
+        return this.checkRequestInstallPackagePermission()
+    }
+    public open suspend fun requestRequestInstallPackagePermissionByJs(): Deferred<Boolean> {
+        return toDeferred(this.requestRequestInstallPackagePermission())
+    }
+    public open fun isSmartUpdateByJs(): Boolean {
+        return this.isSmartUpdate()
+    }
+    public open fun setSmartUpdateByJs(isSmart: Boolean) {
+        return this.setSmartUpdate(isSmart)
     }
     public open fun setLocalCurriculumsByJs(data: String) {
         return this.setLocalCurriculums(data)
