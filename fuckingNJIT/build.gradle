@@ -49,9 +49,11 @@ dependencies {
     compileOnly libs.androidx.core.ktx
     compileOnly libs.kotlin.gradle.plugin
     compileOnly libs.kotlin.reflect
+    compileOnly libs.fastjson
     implementation libs.jsoup
     implementation (libs.android.loading.animation){
         exclude group: 'pl.droidsonroids.gif', module: 'android-gif-drawable'
     }
-    implementation(libs.objectbox.kotlin)
+    implementation libs.objectbox.kotlin
+    implementation libs.fyiban
 }

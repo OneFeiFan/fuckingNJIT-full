@@ -86,7 +86,6 @@ dependencies {
     implementation libs.xxpermissions
     implementation libs.devicecompat
     implementation libs.smartupdatedemo
-    implementation libs.easywindow
     implementation  'com.umeng.umsdk:common:+'// 必选
     implementation  'com.umeng.umsdk:asms:+'// 必选
     implementation 'com.umeng.umsdk:uyumao:+'
