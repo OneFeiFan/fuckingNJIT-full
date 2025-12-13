@@ -1,8 +1,8 @@
 @file:Suppress("UNCHECKED_CAST", "USELESS_CAST", "INAPPLICABLE_JVM_NAME", "UNUSED_ANONYMOUS_PARAMETER", "NAME_SHADOWING")
 package uts.sdk.modules.fuckingNJIT
 import com.feifan.fuckingnjit.utils.Manager
+import com.feifan.fuckingnjit.utils.wifiauth.PortalManager
 import com.feifan.fuckingnjit.widget.DemoMainWidget
-import com.feifan.fuckingnjit.widget.WifiAuth
 import io.dcloud.uniapp.*
 import io.dcloud.uniapp.extapi.*
 import io.dcloud.uts.*
@@ -13,6 +13,39 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+open class CourseParams (
+    @JsonNotNull
+    open var course: String,
+    open var hideRule: String? = null,
+) : UTSObject()
+open class DeleteCourse (
+    @JsonNotNull
+    open var courseId: String,
+    @JsonNotNull
+    open var isSystem: Boolean = false,
+    open var day: Int? = null,
+    open var start: Int? = null,
+) : UTSObject()
+open class RestoreCourse (
+    @JsonNotNull
+    open var courseId: String,
+    @JsonNotNull
+    open var day: Int = 0,
+    @JsonNotNull
+    open var start: Int = 0,
+) : UTSObject()
+fun parseUTSResponse(data: String): Any {
+    try {
+        val result = JSON.parseObject(data)
+        if (result === null) {
+            throw UTSError("数据解析失败：JSON格式可能不正确或数据为空")
+        }
+        return result
+    }
+     catch (e: Throwable) {
+        return e
+    }
+}
 open class Core {
     public open fun showToast(str: String) {
         Manager.showToast(str)
@@ -20,9 +53,9 @@ open class Core {
     public open fun startLogin(relogin: Boolean) {
         Manager.startLogin(relogin)
     }
-    public open fun getCurriculum(refresh: Boolean): UTSPromise<String> {
+    public open fun getCurriculum(refresh: Boolean): UTSPromise<UTSJSONObject> {
         return wrapUTSPromise(suspend w@{
-                return@w Manager.getUserManager().getCurriculum(refresh)
+                return@w JSON.parse<UTSJSONObject>(await(Manager.getUserManager().getCurriculum(refresh))) ?: UTSJSONObject()
         })
     }
     public open fun getAllUsers(): String {
@@ -41,25 +74,40 @@ open class Core {
                 return@w await(Manager.getWebService().getEmptyClassrooms(dateRange, coursePeriod, buildingId))
         })
     }
-    public open fun getAllSorces(refresh: Boolean): UTSPromise<String> {
+    public open fun getSorces(xnm: String, xqm: String, refresh: Boolean): UTSPromise<String> {
         return wrapUTSPromise(suspend w@{
-                return@w await(Manager.getUserManager().getUserScores(refresh))
+                return@w await(Manager.getUserManager().getUserScores(xnm, xqm, refresh))
         })
     }
-    public open fun getSorcesDetail(classId: String, schoolYear: String, semester: String, courseName: String): UTSPromise<String> {
+    public open fun getSorcesDetail(classId: String, schoolYear: String, semester: String, courseName: String): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
-                return@w await(Manager.getWebService().getSorcesDetail(classId, schoolYear, semester, courseName))
+                val data = await(Manager.getWebService().getSorcesDetail(classId, schoolYear, semester, courseName).toJSONString())
+                return@w parseUTSResponse(data)
         })
     }
-    public open fun getNoticeInformation(): UTSPromise<String> {
+    public open fun getNoticeInformation(): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
-                return@w await(Manager.getWebService().getNoticeInformation())
+                val data = await(await(Manager.getWebService().getNoticeInformation().toJSONString()))
+                return@w parseUTSResponse(data)
         })
     }
-    public open fun getAcademicProgress(refresh: Boolean): UTSPromise<String> {
+    public open fun getAcademicProgress(refresh: Boolean): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
-                return@w await(Manager.getWebService().getAcademicProgress(refresh))
+                val data = await(await(Manager.getUserManager().getAcademicProgress(refresh).toJSONString()))
+                return@w parseUTSResponse(data)
         })
+    }
+    public open fun saveCourse(data: CourseParams): UTSJSONObject {
+        return JSON.parse<UTSJSONObject>(Manager.getWebService().saveCourse(data.course, data.hideRule).toJSONString()) ?: UTSJSONObject()
+    }
+    public open fun deleteCourse(data: DeleteCourse): UTSJSONObject {
+        return JSON.parse<UTSJSONObject>(Manager.getWebService().deleteCourse(data.courseId, data.isSystem, data.day, data.start).toJSONString()) ?: UTSJSONObject()
+    }
+    public open fun restoreCourse(data: RestoreCourse): UTSJSONObject {
+        return JSON.parse<UTSJSONObject>(Manager.getWebService().restoreCourse(data.courseId, data.day, data.start).toJSONString()) ?: UTSJSONObject()
+    }
+    public open fun getDate(): String {
+        return Manager.getWebService().getDate()
     }
     public open fun createWidget(): String {
         return DemoMainWidget(UTSAndroid.getAppContext()!!).createWidget()
@@ -70,20 +118,17 @@ open class Core {
     public open fun isWidgetAlreadyCreated(): Boolean {
         return DemoMainWidget(UTSAndroid.getAppContext()!!).isWidgetAlreadyCreated()
     }
-    public open fun createWifiAuthWidget(): String {
-        return WifiAuth(UTSAndroid.getAppContext()!!).createWidget()
+    public open fun switchStatus(status: Boolean): Unit {
+        PortalManager.switchStatus(UTSAndroid.getAppContext()!!, status)
     }
-    public open fun getWifiAuthWidgetPermission() {
-        return WifiAuth(UTSAndroid.getAppContext()!!).getPermission()
-    }
-    public open fun isWifiAuthWidgetAlreadyCreated(): Boolean {
-        return WifiAuth(UTSAndroid.getAppContext()!!).isWidgetAlreadyCreated()
+    public open fun isEnabled(): Boolean {
+        return PortalManager.isEnabled(UTSAndroid.getAppContext()!!)
     }
     public open fun setWifiAuthTupe(type: String) {
         Manager.setWifiAuthTupe(type)
     }
-    public open fun getWifiAuthTupe() {
-        Manager.getWifiAuthTupe()
+    public open fun getWifiAuthTupe(): String {
+        return Manager.getWifiAuthTupe()
     }
     public open fun goHome() {
         Manager.goHome()
@@ -94,29 +139,10 @@ open class Core {
     public open fun isPasswordStorageEnabled(): Boolean {
         return Manager.getUserManager().isPasswordStorageEnabled()
     }
-    public open fun getSemesterStartDate(): String {
-        return Manager.getSemesterStartDate()
-    }
     public open fun updateApp(url: String): UTSPromise<Boolean> {
         return wrapUTSPromise(suspend w@{
                 return@w await(Manager.updateApp(url))
         })
-    }
-    public open fun checkOverlayWindowPermission(): Boolean {
-        return Manager.getPermissionsManager().checkOverlayWindowPermission()
-    }
-    public open fun requestOverlayWindowPermission(): UTSPromise<Boolean> {
-        return UTSPromise(fun(resolve, reject){
-            Manager.getPermissionsManager().requestOverlayWindowPermission(fun(isGranted: Boolean){
-                if (isGranted) {
-                    resolve(true)
-                } else {
-                    reject(false)
-                }
-            }
-            )
-        }
-        )
     }
     public open fun checkRequestInstallPackagePermission(): Boolean {
         return Manager.getPermissionsManager().checkRequestInstallPackagePermission()
@@ -140,15 +166,27 @@ open class Core {
     public open fun setSmartUpdate(isSmart: Boolean) {
         Manager.getPermissionsManager().setSmartUpdate(isSmart)
     }
-    public open fun setLocalCurriculums(data: String) {
-        Manager.setLocalCurriculums(data)
+    public open fun initYiBan(mobile: String, password: String): UTSPromise<Any> {
+        return wrapUTSPromise(suspend w@{
+                val data = await(Manager.initYiBan(mobile, password).toJSONString())
+                return@w parseUTSResponse(data)
+        })
     }
-    public open fun modifyLocalCurriculums(keys: String) {
-        Manager.modifyLocalCurriculums(keys)
-    }
-    public open fun reSetLocalCurriculums() {
-        Manager.reSetLocalCurriculums()
-    }
+}
+open class CourseParamsJSONObject : UTSJSONObject() {
+    open lateinit var course: String
+    open var hideRule: String? = null
+}
+open class DeleteCourseJSONObject : UTSJSONObject() {
+    open lateinit var courseId: String
+    open var isSystem: Boolean = false
+    open var day: Int? = null
+    open var start: Int? = null
+}
+open class RestoreCourseJSONObject : UTSJSONObject() {
+    open lateinit var courseId: String
+    open var day: Int = 0
+    open var start: Int = 0
 }
 open class CoreByJs : Core {
     constructor() : super() {}
@@ -158,7 +196,7 @@ open class CoreByJs : Core {
     public open fun startLoginByJs(relogin: Boolean) {
         return this.startLogin(relogin)
     }
-    public open suspend fun getCurriculumByJs(refresh: Boolean): Deferred<String> {
+    public open suspend fun getCurriculumByJs(refresh: Boolean): Deferred<UTSJSONObject> {
         return toDeferred(this.getCurriculum(refresh))
     }
     public open fun getAllUsersByJs(): String {
@@ -173,17 +211,29 @@ open class CoreByJs : Core {
     public open suspend fun getEmptyClassroomsByJs(dateRange: String, coursePeriod: String, buildingId: String): Deferred<String> {
         return toDeferred(this.getEmptyClassrooms(dateRange, coursePeriod, buildingId))
     }
-    public open suspend fun getAllSorcesByJs(refresh: Boolean): Deferred<String> {
-        return toDeferred(this.getAllSorces(refresh))
+    public open suspend fun getSorcesByJs(xnm: String, xqm: String, refresh: Boolean): Deferred<String> {
+        return toDeferred(this.getSorces(xnm, xqm, refresh))
     }
-    public open suspend fun getSorcesDetailByJs(classId: String, schoolYear: String, semester: String, courseName: String): Deferred<String> {
+    public open suspend fun getSorcesDetailByJs(classId: String, schoolYear: String, semester: String, courseName: String): Deferred<Any> {
         return toDeferred(this.getSorcesDetail(classId, schoolYear, semester, courseName))
     }
-    public open suspend fun getNoticeInformationByJs(): Deferred<String> {
+    public open suspend fun getNoticeInformationByJs(): Deferred<Any> {
         return toDeferred(this.getNoticeInformation())
     }
-    public open suspend fun getAcademicProgressByJs(refresh: Boolean): Deferred<String> {
+    public open suspend fun getAcademicProgressByJs(refresh: Boolean): Deferred<Any> {
         return toDeferred(this.getAcademicProgress(refresh))
+    }
+    public open fun saveCourseByJs(data: CourseParamsJSONObject): UTSJSONObject {
+        return this.saveCourse(CourseParams(course = data.course, hideRule = data.hideRule))
+    }
+    public open fun deleteCourseByJs(data: DeleteCourseJSONObject): UTSJSONObject {
+        return this.deleteCourse(DeleteCourse(courseId = data.courseId, isSystem = data.isSystem, day = data.day, start = data.start))
+    }
+    public open fun restoreCourseByJs(data: RestoreCourseJSONObject): UTSJSONObject {
+        return this.restoreCourse(RestoreCourse(courseId = data.courseId, day = data.day, start = data.start))
+    }
+    public open fun getDateByJs(): String {
+        return this.getDate()
     }
     public open fun createWidgetByJs(): String {
         return this.createWidget()
@@ -194,19 +244,16 @@ open class CoreByJs : Core {
     public open fun isWidgetAlreadyCreatedByJs(): Boolean {
         return this.isWidgetAlreadyCreated()
     }
-    public open fun createWifiAuthWidgetByJs(): String {
-        return this.createWifiAuthWidget()
+    public open fun switchStatusByJs(status: Boolean): Unit {
+        return this.switchStatus(status)
     }
-    public open fun getWifiAuthWidgetPermissionByJs() {
-        return this.getWifiAuthWidgetPermission()
-    }
-    public open fun isWifiAuthWidgetAlreadyCreatedByJs(): Boolean {
-        return this.isWifiAuthWidgetAlreadyCreated()
+    public open fun isEnabledByJs(): Boolean {
+        return this.isEnabled()
     }
     public open fun setWifiAuthTupeByJs(type: String) {
         return this.setWifiAuthTupe(type)
     }
-    public open fun getWifiAuthTupeByJs() {
+    public open fun getWifiAuthTupeByJs(): String {
         return this.getWifiAuthTupe()
     }
     public open fun goHomeByJs() {
@@ -218,17 +265,8 @@ open class CoreByJs : Core {
     public open fun isPasswordStorageEnabledByJs(): Boolean {
         return this.isPasswordStorageEnabled()
     }
-    public open fun getSemesterStartDateByJs(): String {
-        return this.getSemesterStartDate()
-    }
     public open suspend fun updateAppByJs(url: String): Deferred<Boolean> {
         return toDeferred(this.updateApp(url))
-    }
-    public open fun checkOverlayWindowPermissionByJs(): Boolean {
-        return this.checkOverlayWindowPermission()
-    }
-    public open suspend fun requestOverlayWindowPermissionByJs(): Deferred<Boolean> {
-        return toDeferred(this.requestOverlayWindowPermission())
     }
     public open fun checkRequestInstallPackagePermissionByJs(): Boolean {
         return this.checkRequestInstallPackagePermission()
@@ -242,13 +280,7 @@ open class CoreByJs : Core {
     public open fun setSmartUpdateByJs(isSmart: Boolean) {
         return this.setSmartUpdate(isSmart)
     }
-    public open fun setLocalCurriculumsByJs(data: String) {
-        return this.setLocalCurriculums(data)
-    }
-    public open fun modifyLocalCurriculumsByJs(keys: String) {
-        return this.modifyLocalCurriculums(keys)
-    }
-    public open fun reSetLocalCurriculumsByJs() {
-        return this.reSetLocalCurriculums()
+    public open suspend fun initYiBanByJs(mobile: String, password: String): Deferred<Any> {
+        return toDeferred(this.initYiBan(mobile, password))
     }
 }
