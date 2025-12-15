@@ -2,7 +2,7 @@
 package uts.sdk.modules.fuckingNJIT
 import com.feifan.fuckingnjit.utils.Manager
 import com.feifan.fuckingnjit.utils.wifiauth.PortalManager
-import com.feifan.fuckingnjit.widget.DemoMainWidget
+import com.feifan.fuckingnjit.widget.CurriculumsWidget
 import io.dcloud.uniapp.*
 import io.dcloud.uniapp.extapi.*
 import io.dcloud.uts.*
@@ -110,13 +110,13 @@ open class Core {
         return Manager.getWebService().getDate()
     }
     public open fun createWidget(): String {
-        return DemoMainWidget(UTSAndroid.getAppContext()!!).createWidget()
+        return CurriculumsWidget(UTSAndroid.getAppContext()!!).createWidget()
     }
     public open fun getWidgetPermission() {
-        return DemoMainWidget(UTSAndroid.getAppContext()!!).getPermission()
+        return CurriculumsWidget(UTSAndroid.getAppContext()!!).getPermission()
     }
     public open fun isWidgetAlreadyCreated(): Boolean {
-        return DemoMainWidget(UTSAndroid.getAppContext()!!).isWidgetAlreadyCreated()
+        return CurriculumsWidget(UTSAndroid.getAppContext()!!).isWidgetAlreadyCreated()
     }
     public open fun switchStatus(status: Boolean): Unit {
         PortalManager.switchStatus(UTSAndroid.getAppContext()!!, status)
