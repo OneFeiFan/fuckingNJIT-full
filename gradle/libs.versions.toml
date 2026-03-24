@@ -19,6 +19,7 @@ objectbox = "4.3.0"
 objectboxKotlin = "5.0.0"
 smartupdatedemo = "1.0.2"
 zip4j = "2.11.5"
+lifecycleService = "2.10.0"
 
 [libraries]
 android-loading-animation = { module = "com.github.OneFeiFan:Android-Loading-Animation", version.ref = "androidLoadingAnimation" }
@@ -39,6 +40,7 @@ objectbox-kotlin = { module = "io.objectbox:objectbox-kotlin", version.ref = "ob
 #noinspection Aligned16KB
 smartupdatedemo = { module = "com.github.OneFeiFan:SmartUpdateDemo", version.ref = "smartupdatedemo" }
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
+androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

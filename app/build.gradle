@@ -100,6 +100,7 @@ dependencies {
     implementation libs.devicecompat
     implementation libs.smartupdatedemo
     implementation libs.zip4j
+    implementation libs.androidx.lifecycle.service
     implementation  'com.umeng.umsdk:common:+'// 必选
     implementation  'com.umeng.umsdk:asms:+'// 必选
     implementation 'com.umeng.umsdk:uyumao:+'

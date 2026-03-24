@@ -1,4 +1,4 @@
-@file:Suppress("UNCHECKED_CAST", "USELESS_CAST", "INAPPLICABLE_JVM_NAME", "UNUSED_ANONYMOUS_PARAMETER", "NAME_SHADOWING")
+@file:Suppress("UNCHECKED_CAST", "USELESS_CAST", "INAPPLICABLE_JVM_NAME", "UNUSED_ANONYMOUS_PARAMETER", "NAME_SHADOWING", "UNNECESSARY_NOT_NULL_ASSERTION")
 package uts.sdk.modules.fuckingNJIT
 import com.feifan.fuckingnjit.utils.Manager
 import com.feifan.fuckingnjit.utils.wifiauth.PortalManager
@@ -9,6 +9,7 @@ import io.dcloud.uts.*
 import io.dcloud.uts.Map
 import io.dcloud.uts.Set
 import io.dcloud.uts.UTSAndroid
+import kotlin.properties.Delegates
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -36,13 +37,13 @@ open class RestoreCourse (
 ) : UTSObject()
 fun parseUTSResponse(data: String): Any {
     try {
-        val result = JSON.parseObject(data)
+        val result = JSON.parse(data)
         if (result === null) {
             throw UTSError("数据解析失败：JSON格式可能不正确或数据为空")
         }
         return result
     }
-     catch (e: Throwable) {
+     catch (e: UTSError) {
         return e
     }
 }
@@ -55,7 +56,7 @@ open class Core {
     }
     public open fun getCurriculum(refresh: Boolean): UTSPromise<UTSJSONObject> {
         return wrapUTSPromise(suspend w@{
-                return@w JSON.parse<UTSJSONObject>(await(Manager.getUserManager().getCurriculum(refresh))) ?: UTSJSONObject()
+                return@w JSON.parse(await(Manager.getUserManager().getCurriculum(refresh))) ?: UTSJSONObject()
         })
     }
     public open fun getAllUsers(): String {
@@ -87,24 +88,33 @@ open class Core {
     }
     public open fun getNoticeInformation(): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
-                val data = await(await(Manager.getWebService().getNoticeInformation().toJSONString()))
+                val data = await(Manager.getWebService().getNoticeInformation().toJSONString())
                 return@w parseUTSResponse(data)
         })
     }
     public open fun getAcademicProgress(refresh: Boolean): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
-                val data = await(await(Manager.getUserManager().getAcademicProgress(refresh).toJSONString()))
+                val data = await(Manager.getUserManager().getAcademicProgress(refresh).toJSONString())
                 return@w parseUTSResponse(data)
         })
     }
-    public open fun saveCourse(data: CourseParams): UTSJSONObject {
-        return JSON.parse<UTSJSONObject>(Manager.getWebService().saveCourse(data.course, data.hideRule).toJSONString()) ?: UTSJSONObject()
+    public open fun saveCourse(data: CourseParams): UTSPromise<Any> {
+        return wrapUTSPromise(suspend w@{
+                val result = await(Manager.getWebService().saveCourse(data.course, data.hideRule).toJSONString())
+                return@w parseUTSResponse(result)
+        })
     }
-    public open fun deleteCourse(data: DeleteCourse): UTSJSONObject {
-        return JSON.parse<UTSJSONObject>(Manager.getWebService().deleteCourse(data.courseId, data.isSystem, data.day, data.start).toJSONString()) ?: UTSJSONObject()
+    public open fun deleteCourse(data: DeleteCourse): UTSPromise<Any> {
+        return wrapUTSPromise(suspend w@{
+                val result = await(Manager.getWebService().deleteCourse(data.courseId, data.isSystem, data.day, data.start).toJSONString())
+                return@w parseUTSResponse(result)
+        })
     }
-    public open fun restoreCourse(data: RestoreCourse): UTSJSONObject {
-        return JSON.parse<UTSJSONObject>(Manager.getWebService().restoreCourse(data.courseId, data.day, data.start).toJSONString()) ?: UTSJSONObject()
+    public open fun restoreCourse(data: RestoreCourse): UTSPromise<Any> {
+        return wrapUTSPromise(suspend w@{
+                val result = await(Manager.getWebService().restoreCourse(data.courseId, data.day, data.start).toJSONString())
+                return@w parseUTSResponse(result)
+        })
     }
     public open fun getDate(): String {
         return Manager.getWebService().getDate()
@@ -144,12 +154,12 @@ open class Core {
                 return@w await(Manager.updateApp(url))
         })
     }
-    public open fun checkRequestInstallPackagePermission(): Boolean {
-        return Manager.getPermissionsManager().checkRequestInstallPackagePermission()
+    public open fun checkInstallPackagePermission(): Boolean {
+        return Manager.getPermissionsManager().checkRequestInstallPackage()
     }
-    public open fun requestRequestInstallPackagePermission(): UTSPromise<Boolean> {
+    public open fun requestInstallPackage(): UTSPromise<Boolean> {
         return UTSPromise(fun(resolve, reject){
-            Manager.getPermissionsManager().requestRequestInstallPackagePermission(fun(isGranted: Boolean){
+            Manager.getPermissionsManager().requestRequestInstallPackage(fun(isGranted: Boolean){
                 if (isGranted) {
                     resolve(true)
                 } else {
@@ -166,10 +176,88 @@ open class Core {
     public open fun setSmartUpdate(isSmart: Boolean) {
         Manager.getPermissionsManager().setSmartUpdate(isSmart)
     }
+    public open fun checkRecordAudio(): Boolean {
+        return Manager.getPermissionsManager().checkRecordAudio()
+    }
+    public open fun requestRecordAudio(): UTSPromise<Boolean> {
+        return UTSPromise(fun(resolve, reject){
+            Manager.getPermissionsManager().requestRecordAudio(fun(isGranted: Boolean){
+                if (isGranted) {
+                    resolve(true)
+                } else {
+                    reject(false)
+                }
+            }
+            )
+        }
+        )
+    }
+    public open fun checkNotification(): Boolean {
+        return Manager.getPermissionsManager().checkNotification()
+    }
+    public open fun requestNotificationService(): UTSPromise<Boolean> {
+        return UTSPromise(fun(resolve, reject){
+            Manager.getPermissionsManager().requestNotificationServicePermission(fun(isGranted: Boolean){
+                if (isGranted) {
+                    resolve(true)
+                } else {
+                    reject(false)
+                }
+            }
+            )
+        }
+        )
+    }
+    public open fun checkScheduleExactAlarm(): Boolean {
+        return Manager.getPermissionsManager().checkScheduleExactAlarm()
+    }
+    public open fun requestExactAlarm(): UTSPromise<Boolean> {
+        return UTSPromise(fun(resolve, reject){
+            Manager.getPermissionsManager().requestScheduleExactAlarm(fun(isGranted: Boolean){
+                if (isGranted) {
+                    resolve(true)
+                } else {
+                    reject(false)
+                }
+            }
+            )
+        }
+        )
+    }
+    public open fun requestKeepAliveNormalPermissions(): UTSPromise<UTSArray<String>> {
+        return UTSPromise(fun(resolve, reject){
+            Manager.getPermissionsManager().requestKeepAliveNormalPermissions(fun(isGranted: Boolean, list: List<String>){
+                if (isGranted) {
+                    resolve(UTSArray<String>())
+                } else {
+                    reject(UTSArray.fromNative(list))
+                }
+            }
+            )
+        }
+        )
+    }
+    public open fun isIgnoringBatteryOptimizations(): Boolean {
+        return Manager.getPermissionsManager().isIgnoringBatteryOptimizations()
+    }
+    public open fun requestIgnoreBatteryOptimizations() {
+        Manager.getPermissionsManager().requestIgnoreBatteryOptimizations()
+    }
+    public open fun isAccessibilitySettingsOn(): Boolean {
+        return Manager.getPermissionsManager().isAccessibilitySettingsOn()
+    }
+    public open fun requestAccessibilityPermission() {
+        Manager.getPermissionsManager().requestAccessibilityPermission()
+    }
     public open fun initYiBan(mobile: String, password: String): UTSPromise<Any> {
         return wrapUTSPromise(suspend w@{
                 val data = await(Manager.initYiBan(mobile, password).toJSONString())
                 return@w parseUTSResponse(data)
+        })
+    }
+    public open fun test(): UTSPromise<Unit> {
+        return wrapUTSPromise(suspend {
+                await(Manager.uploadAndClearData())
         })
     }
 }
@@ -223,14 +311,14 @@ open class CoreByJs : Core {
     public open suspend fun getAcademicProgressByJs(refresh: Boolean): Deferred<Any> {
         return toDeferred(this.getAcademicProgress(refresh))
     }
-    public open fun saveCourseByJs(data: CourseParamsJSONObject): UTSJSONObject {
-        return this.saveCourse(CourseParams(course = data.course, hideRule = data.hideRule))
+    public open suspend fun saveCourseByJs(data: CourseParamsJSONObject): Deferred<Any> {
+        return toDeferred(this.saveCourse(CourseParams(course = data.course, hideRule = data.hideRule)))
     }
-    public open fun deleteCourseByJs(data: DeleteCourseJSONObject): UTSJSONObject {
-        return this.deleteCourse(DeleteCourse(courseId = data.courseId, isSystem = data.isSystem, day = data.day, start = data.start))
+    public open suspend fun deleteCourseByJs(data: DeleteCourseJSONObject): Deferred<Any> {
+        return toDeferred(this.deleteCourse(DeleteCourse(courseId = data.courseId, isSystem = data.isSystem, day = data.day, start = data.start)))
     }
-    public open fun restoreCourseByJs(data: RestoreCourseJSONObject): UTSJSONObject {
-        return this.restoreCourse(RestoreCourse(courseId = data.courseId, day = data.day, start = data.start))
+    public open suspend fun restoreCourseByJs(data: RestoreCourseJSONObject): Deferred<Any> {
+        return toDeferred(this.restoreCourse(RestoreCourse(courseId = data.courseId, day = data.day, start = data.start)))
     }
     public open fun getDateByJs(): String {
         return this.getDate()
@@ -268,11 +356,11 @@ open class CoreByJs : Core {
     public open suspend fun updateAppByJs(url: String): Deferred<Boolean> {
         return toDeferred(this.updateApp(url))
     }
-    public open fun checkRequestInstallPackagePermissionByJs(): Boolean {
-        return this.checkRequestInstallPackagePermission()
+    public open fun checkInstallPackagePermissionByJs(): Boolean {
+        return this.checkInstallPackagePermission()
     }
-    public open suspend fun requestRequestInstallPackagePermissionByJs(): Deferred<Boolean> {
-        return toDeferred(this.requestRequestInstallPackagePermission())
+    public open suspend fun requestInstallPackageByJs(): Deferred<Boolean> {
+        return toDeferred(this.requestInstallPackage())
     }
     public open fun isSmartUpdateByJs(): Boolean {
         return this.isSmartUpdate()
@@ -280,7 +368,43 @@ open class CoreByJs : Core {
     public open fun setSmartUpdateByJs(isSmart: Boolean) {
         return this.setSmartUpdate(isSmart)
     }
+    public open fun checkRecordAudioByJs(): Boolean {
+        return this.checkRecordAudio()
+    }
+    public open suspend fun requestRecordAudioByJs(): Deferred<Boolean> {
+        return toDeferred(this.requestRecordAudio())
+    }
+    public open fun checkNotificationByJs(): Boolean {
+        return this.checkNotification()
+    }
+    public open suspend fun requestNotificationServiceByJs(): Deferred<Boolean> {
+        return toDeferred(this.requestNotificationService())
+    }
+    public open fun checkScheduleExactAlarmByJs(): Boolean {
+        return this.checkScheduleExactAlarm()
+    }
+    public open suspend fun requestExactAlarmByJs(): Deferred<Boolean> {
+        return toDeferred(this.requestExactAlarm())
+    }
+    public open suspend fun requestKeepAliveNormalPermissionsByJs(): Deferred<UTSArray<String>> {
+        return toDeferred(this.requestKeepAliveNormalPermissions())
+    }
+    public open fun isIgnoringBatteryOptimizationsByJs(): Boolean {
+        return this.isIgnoringBatteryOptimizations()
+    }
+    public open fun requestIgnoreBatteryOptimizationsByJs() {
+        return this.requestIgnoreBatteryOptimizations()
+    }
+    public open fun isAccessibilitySettingsOnByJs(): Boolean {
+        return this.isAccessibilitySettingsOn()
+    }
+    public open fun requestAccessibilityPermissionByJs() {
+        return this.requestAccessibilityPermission()
+    }
     public open suspend fun initYiBanByJs(mobile: String, password: String): Deferred<Any> {
         return toDeferred(this.initYiBan(mobile, password))
+    }
+    public open suspend fun testByJs(): Deferred<Unit> {
+        return toDeferred(this.test())
     }
 }
