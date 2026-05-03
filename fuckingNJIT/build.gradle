@@ -1,7 +1,9 @@
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.objectbox)
 }
+
 
 android {
     namespace 'com.feifan.fuckingnjit'
@@ -41,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation libs.androidx.appcompat
     compileOnly fileTree(include: ['*.aar'], dir: '../uniappx/libs')
     compileOnly fileTree(include: ['*.aar'], dir: '../app/libs')
     compileOnly fileTree(include: ['*.aar'], dir: './libs')
@@ -51,9 +54,15 @@ dependencies {
     compileOnly libs.kotlin.reflect
     compileOnly libs.fastjson
     implementation libs.jsoup
+    implementation libs.okhttp
+    implementation libs.xxpermissions
     implementation (libs.android.loading.animation){
         exclude group: 'pl.droidsonroids.gif', module: 'android-gif-drawable'
     }
+    implementation libs.smartupdatedemo
     implementation libs.objectbox.kotlin
     implementation libs.fyiban
+    implementation libs.androidx.startup.runtime
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.service
 }
