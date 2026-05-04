@@ -1,7 +1,6 @@
 package com.feifan.fuckingnjit.service.impl
 
 import android.content.Context
-import android.util.Log
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
@@ -238,7 +237,6 @@ class WebServiceImpl private constructor() : WebService {
         if (raw.isEmpty()) {
             return "2025-02-17"
         }
-        return "2025-02-17"
         val jsonObject = JSON.parseObject(raw)
         val rqazcList = jsonObject.getJSONArray("rqazcList")
         if (rqazcList.isEmpty()) {
@@ -496,9 +494,9 @@ class WebServiceImpl private constructor() : WebService {
             return NetworkStatus.NotFound.toJsonResult()
         }
 
-        val jg_id = doc.select("#jg_id option[selected]").attr("value") ?: ""
-        val njdm_id = doc.select("#njdm_id option[selected]").attr("value") ?: ""//年级
-        val zyh_id = doc.select("#zyh_id option[selected]").attr("value") ?: ""//专业
+        val jg_id = doc.select("#jg_id option[selected]").attr("value")
+        val njdm_id = doc.select("#njdm_id option[selected]").attr("value")//年级
+        val zyh_id = doc.select("#zyh_id option[selected]").attr("value")//专业
 
         val url1 = buildUrl(
             "/jwglxt/xjyj/xjyj_cxXjyjjdlb.html",

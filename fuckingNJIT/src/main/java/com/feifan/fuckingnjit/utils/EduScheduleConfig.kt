@@ -90,7 +90,7 @@ object EduScheduleConfig {
                 Instant.ofEpochMilli(dateMs).atZone(ZoneId.systemDefault()).toLocalDate().format(FORMATTER)
             } else "2025-02-17"
         } catch (e: Exception) {
-            e
+            e.printStackTrace()
             "2025-02-17"
         }
     }
@@ -118,7 +118,7 @@ object EduScheduleConfig {
     fun calculateCurrentWeek(startMs: Long): Int {
         val start = Instant.ofEpochMilli(startMs).atZone(ZoneId.systemDefault()).toLocalDate()
         // 保持原代码逻辑：当前日期减去365天
-        val today = LocalDate.now().minusDays(365)
+        val today = LocalDate.now()
         val diffDays = ChronoUnit.DAYS.between(start, today)
         return if (diffDays < 0) 1 else (diffDays / 7).toInt() + 1
     }
@@ -156,8 +156,8 @@ object EduScheduleConfig {
                 semester = 3
             }
         } else {
-            schoolYearStart = year - 2
-            schoolYearEnd = year - 1
+            schoolYearStart = year - 1
+            schoolYearEnd = year
             semester = 12
         }
         return "$schoolYearStart-$schoolYearEnd-$semester"
