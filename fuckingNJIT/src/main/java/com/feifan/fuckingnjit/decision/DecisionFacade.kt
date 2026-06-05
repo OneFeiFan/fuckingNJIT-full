@@ -49,21 +49,23 @@ object DecisionFacade {
             val mode = AppDataCenter.getCurrentUser()?.currentAppMode ?: AppMode.BALANCE_MODE
 
             val curriculumsObj = UserManagerImpl.getInstance().getCurriculum(appContext, false)
-            val validCoursesArray = curriculumsObj.getJSONArray("validTimeCourses") ?: JSONArray()
-            val allValidCourses =
-                JSON.parseArray(validCoursesArray.toJSONString(), Course::class.java)
-                    ?: mutableListOf()
+            val dataObj = curriculumsObj.getJSONObject("data")
+            val curriculumsStr = dataObj?.getString("validTimeCourses") ?: "[]"
+            val allValidCourses = JSON.parseArray(curriculumsStr, Course::class.java) ?: mutableListOf()
+
+            val today = LocalDate.now()
+            val tomorrow = today.plusDays(1)
+            val targetDay = tomorrow.dayOfWeek.value // java.time 中 1=周一, 7=周日，完美对应课表的 course.day
 
             val currentWeek = TodayScheduleManager.getCurrentWeek()
-            val tomorrow = LocalDate.now().plusDays(1)
-            val targetDay = tomorrow.dayOfWeek.value
+// 跨周判定：如果今天是周日(7)，明天的课程应当属于下一周
+            val tomorrowWeek = if (today.dayOfWeek.value == 7) currentWeek + 1 else currentWeek
 
+// 3. 筛选并排序明天的课程
             val tomorrowCourses = allValidCourses.filter { course ->
-                course.day == targetDay && course.weekList.contains(currentWeek)
+                course.day == targetDay && course.weekList.contains(tomorrowWeek)
             }.sortedWith { c1, c2 ->
-                if (c1.startNode != c2.startNode) c1.startNode - c2.startNode else c1.name.compareTo(
-                    c2.name
-                )
+                if (c1.startNode != c2.startNode) c1.startNode - c2.startNode else c1.name.compareTo(c2.name)
             }
 
             val recentSleepRecords = AppDataCenter.getValidSleepRecordsForUI().take(7).reversed()

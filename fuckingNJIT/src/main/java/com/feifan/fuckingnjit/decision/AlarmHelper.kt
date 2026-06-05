@@ -3,107 +3,105 @@ package com.feifan.fuckingnjit.decision
 import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
-import android.widget.Toast
+import android.util.Log
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-/**
- * 闹钟辅助工具
- *
- * 封装了通过 ACTION_SET_ALARM 调起系统闹钟 App 的完整逻辑。
- * UI 层只需拿到 DashboardResponse 中的 [AlarmInfo]，然后调用本工具即可一键设闹钟。
- *
- * 设计原则：
- *   - 不使用 AlarmManager 直接设闹钟（避免权限问题和用户信任问题）
- *   - 通过 Intent 打开系统闹钟页面，时间预填好，用户点一下确认即可
- *   - 不做 UI 交互，纯工具类，由前端 Activity/Fragment 触发
- */
 @Suppress("unused")
 object AlarmHelper {
 
+    // 定义我们专属的静默闹钟标志前缀
+    private const val AUTO_ALARM_PREFIX = "[FNJIT-AUTO]"
+
     /**
-     * 调起系统闹钟 App 设置闹钟
-     *
-     * 使用方式（UI 层示例代码）：
-     * ```kotlin
-     * // 从 dashboardJson 中取出 alarmInfo
-     * val alarmInfo = dashboardObj.getObject("alarmInfo", AlarmInfo::class.java)
-     * if (alarmInfo?.canSetAlarm == true) {
-     *     AlarmHelper.setSystemAlarm(context, alarmInfo)
-     * }
-     * ```
-     *
-     * @param context  Context（建议用 Activity Context，确保 startActivityForResult 有宿主）
-     * @param alarmInfo 由 DecisionEngine.buildAlarmInfo() 产出的闹钟信息
-     * @return true=已成功发出Intent / false=参数异常或无法处理
+     * 原有方法：供前台 Vue UI 点击“立即确认闹钟”时使用
+     * 保留弹窗 UI，让用户有明确的操作反馈
      */
     fun setSystemAlarm(context: Context, alarmInfo: AlarmInfo): Boolean {
-        // 前置校验：canSetAlarm 必须为 true
-        if (!alarmInfo.canSetAlarm) {
-            Toast.makeText(
-                context,
-                alarmInfo.reason.ifEmpty { "当前不允许设置闹钟" },
-                Toast.LENGTH_SHORT
-            ).show()
-            return false
-        }
-
-        // 时间范围合理性检查
-        val hour = alarmInfo.suggestedWakeUpHour.coerceIn(0, 23)
-        val minute = alarmInfo.suggestedWakeUpMinute.coerceIn(0, 59)
-
+        if (!alarmInfo.canSetAlarm) return false
         try {
             val intent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
-                putExtra(AlarmClock.EXTRA_HOUR, hour)
-                putExtra(AlarmClock.EXTRA_MINUTES, minute)
+                putExtra(AlarmClock.EXTRA_HOUR, alarmInfo.suggestedWakeUpHour)
+                putExtra(AlarmClock.EXTRA_MINUTES, alarmInfo.suggestedWakeUpMinute)
                 putExtra(AlarmClock.EXTRA_MESSAGE, alarmInfo.alarmLabel)
-                // SKIP_UI=false：打开系统闹钟页面让用户确认，而不是静默设置
-                // 这样用户的闹钟列表里能看到这个闹钟，符合用户心理模型
-                putExtra(AlarmClock.EXTRA_SKIP_UI, false)
-                // 使用 NEW_TASK 标志，因为可能从非 Activity Context 调用
+                putExtra(AlarmClock.EXTRA_SKIP_UI, false) // 显式要求系统弹窗确认
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-
             context.startActivity(intent)
             return true
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(context, "无法打开系统闹钟：${e.message}", Toast.LENGTH_LONG).show()
             return false
         }
     }
 
     /**
-     * 快捷方法：直接通过小时和分钟调起系统闹钟（不经过 AlarmInfo）
+     * 新增方法：供后台主心跳或静默刷新调用 (Sweep & Replace 策略)
      *
-     * 适用于 UI 层已有独立的时间选择器、不需要走决策引擎的场景
-     *
-     * @param context   Context
-     * @param hour      小时（0~23）
-     * @param minute    分钟（0~59）
-     * @param label     闹钟标签文案（可选）
+     * @param context Context
+     * @param alarmInfo 决策引擎计算出的最新闹钟信息
+     * @param lastSyncedLabel 前端缓存记录的"上一次成功设置的闹钟标签"
+     * @return 成功设置的新闹钟标签（如果未变更则返回 null，由 UTS 层判断处理）
      */
-    fun setSystemAlarmDirect(
-        context: Context,
-        hour: Int,
-        minute: Int,
-        label: String = "FuckingNJIT 起床提醒"
-    ): Boolean {
-        val info = AlarmInfo(
-            suggestedWakeUpHour = hour.coerceIn(0, 23),
-            suggestedWakeUpMinute = minute.coerceIn(0, 59),
-            alarmType = "manual",
-            alarmLabel = label,
-            canSetAlarm = true
-        )
-        return setSystemAlarm(context, info)
-    }
+    fun autoSyncAlarm(context: Context, alarmInfo: AlarmInfo, lastSyncedLabel: String?): String? {
+        if (!alarmInfo.canSetAlarm) return null
 
-    /**
-     * 检查设备是否支持 ACTION_SET_ALARM
-     *
-     * 部分定制 ROM 或特殊设备可能没有标准的闹钟 App，
-     * 调用前可先做此检查来决定是否展示"设闹钟"按钮
-     */
-    fun isAlarmAvailable(context: Context): Boolean {
-        return Intent(AlarmClock.ACTION_SET_ALARM).resolveActivity(context.packageManager) != null
+        val hour = alarmInfo.suggestedWakeUpHour.coerceIn(0, 23)
+        val minute = alarmInfo.suggestedWakeUpMinute.coerceIn(0, 59)
+
+        val timeStr = String.format(Locale.ROOT, "%02d:%02d", hour, minute)
+        // 获取明天的日期，拼接到标签中
+        val tomorrow = LocalDate.now().plusDays(1)
+        val dateStr = tomorrow.format(DateTimeFormatter.ofPattern("MM-dd"))
+        val newLabel = "$AUTO_ALARM_PREFIX-$dateStr 明早 $timeStr 起床"
+
+        if (newLabel == lastSyncedLabel) {
+            return lastSyncedLabel
+        }
+
+        try {
+            // ==========================================
+            // 第一步：先加新闹钟（最高优保障）
+            // 此时系统闹钟 App 没有在处理任何事情，瞬间秒建！
+            // ==========================================
+            val setIntent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
+                putExtra(AlarmClock.EXTRA_HOUR, hour)
+                putExtra(AlarmClock.EXTRA_MINUTES, minute)
+                putExtra(AlarmClock.EXTRA_MESSAGE, newLabel)
+                putExtra(AlarmClock.EXTRA_SKIP_UI, true)
+
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            context.startActivity(setIntent)
+            Log.d("AlarmHelper", "已优先发送静默创建新闹钟指令: $newLabel")
+
+            // ==========================================
+            // 第二步：深呼吸（留出系统处理时间）
+            // 给系统闹钟 2~3 秒的时间去把它新建闹钟的逻辑跑完。
+            // 因为这段代码跑在 IO 协程里，所以这里的 sleep 绝对不会卡顿主界面的 UI
+            // ==========================================
+            Thread.sleep(2500)
+
+            // ==========================================
+            // 第三步：后删旧闹钟（低优维护）
+            // 根据上一次存下来的旧标签，精准关闭昨天的闹钟
+            // ==========================================
+            if (!lastSyncedLabel.isNullOrEmpty()) {
+                val dismissIntent = Intent(AlarmClock.ACTION_DISMISS_ALARM).apply {
+                    putExtra(AlarmClock.EXTRA_ALARM_SEARCH_MODE, AlarmClock.ALARM_SEARCH_MODE_LABEL)
+                    putExtra(AlarmClock.EXTRA_MESSAGE, lastSyncedLabel)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(dismissIntent)
+                Log.d("AlarmHelper", "已发送关闭旧闹钟指令: $lastSyncedLabel")
+            }
+
+            return newLabel
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
     }
 }

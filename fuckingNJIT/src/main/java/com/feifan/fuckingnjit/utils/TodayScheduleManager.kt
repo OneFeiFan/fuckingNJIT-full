@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray
 import com.feifan.fuckingnjit.model.Course
 import com.feifan.fuckingnjit.model.User
 import com.feifan.fuckingnjit.utils.database.AppDataCenter
+import io.dcloud.uts.plus
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -125,11 +126,11 @@ object TodayScheduleManager {
                 .toEpochMilli()
         cachedCurrentWeek = EduScheduleConfig.calculateCurrentWeek(startDateMilli)
         AppDataCenter.updateSystemConfig { it.currentWeek = cachedCurrentWeek }// 顺手更新当前周
-        val todayWeekIndex = Tools.todayWeekIndex()
-        val targetDay = todayWeekIndex + 1
+        val targetDay = Tools.todayWeekIndex() + 1
 
         val user = AppDataCenter.getCurrentUser() ?: User()
-        val curriculumsStr = user.curriculums.getString("validTimeCourses")
+        val curriculumsStr = user.curriculums.getJSONObject("data").getString("validTimeCourses")
+
         val allCurriculumData =
             JSONArray.parseArray(curriculumsStr, Course::class.java) ?: emptyList()
 

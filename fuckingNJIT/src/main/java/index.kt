@@ -1,6 +1,7 @@
 @file:Suppress("UNCHECKED_CAST", "USELESS_CAST", "INAPPLICABLE_JVM_NAME", "UNUSED_ANONYMOUS_PARAMETER", "NAME_SHADOWING", "UNNECESSARY_NOT_NULL_ASSERTION")
 package uts.sdk.modules.fuckingNJIT
 import com.feifan.fuckingnjit.decision.DecisionFacade
+import com.feifan.fuckingnjit.decision.WakeUpConfiguration
 import com.feifan.fuckingnjit.service.DataSyncService
 import com.feifan.fuckingnjit.utils.AppConfig
 import com.feifan.fuckingnjit.utils.CoreInitializer
@@ -356,6 +357,64 @@ open class Core {
                 }
         })
     }
+    public open fun getWakeUpConfigData(): UTSJSONObject {
+        val config = DecisionFacade.getWakeUpConfig()
+        return object : UTSJSONObject() {
+            var preClassBufferMinutes = config.preClassBufferMinutes
+            var noClassWakeUpHour = config.noClassWakeUpHour
+            var noClassWakeUpMinute = config.noClassWakeUpMinute
+            var oneTimeOverrideHour = config.oneTimeOverrideHour
+            var oneTimeOverrideMinute = config.oneTimeOverrideMinute
+            var oneTimeOverrideDate = config.oneTimeOverrideDate
+            var alarmEnabled = config.alarmEnabled
+        }
+    }
+    public open fun saveConfigFull(buffer: Int, noClassHr: Int, noClassMin: Int, overrideHr: Int, overrideMin: Int, overrideDate: String, enabled: Boolean): Boolean {
+        val newConfig = WakeUpConfiguration(buffer, noClassHr, noClassMin, overrideHr, overrideMin, overrideDate, enabled)
+        val result = DecisionFacade.saveWakeUpConfig(newConfig).toJSONString()
+        val tmp = parseUTSResponse(result)
+        return (tmp["code"] == 200.0 || tmp["code"] == 200)
+    }
+    public open fun setOneTimeOverrideSync(hour: Int, minute: Int, targetDate: String): Boolean {
+        val result = DecisionFacade.setOneTimeOverride(hour, minute, targetDate).toJSONString()
+        val tmp = parseUTSResponse(result)
+        return (tmp["code"] == 200.0 || tmp["code"] == 200)
+    }
+    public open fun clearOneTimeOverrideSync(): Boolean {
+        val result = DecisionFacade.clearOneTimeOverride().toJSONString()
+        val tmp = parseUTSResponse(result)
+        return (tmp["code"] == 200.0 || tmp["code"] == 200)
+    }
+    public open fun getAlarmStatusAsync(): UTSPromise<UTSJSONObject?> {
+        return wrapUTSPromise(suspend w@{
+                try {
+                    val data = await(DecisionFacade.getAlarmStatus(UTSAndroid.getAppContext()!!).toJSONString())
+                    val tmp = parseUTSResponse(data)
+                    if (tmp["code"] == 200.0 || tmp["code"] == 200) {
+                        return@w tmp["data"]
+                    }
+                }
+                 catch (e: Throwable) {
+                    console.error("Failed to get alarm status", e)
+                }
+                return@w null
+        })
+    }
+    public open fun requestSetAlarmAsync(): UTSPromise<UTSJSONObject?> {
+        return wrapUTSPromise(suspend w@{
+                try {
+                    val data = await(DecisionFacade.requestSetAlarm(UTSAndroid.getAppContext()!!).toJSONString())
+                    val tmp = parseUTSResponse(data)
+                    if (tmp["code"] == 200.0 || tmp["code"] == 200) {
+                        return@w tmp["data"]
+                    }
+                }
+                 catch (e: Throwable) {
+                    console.error("Failed to request set alarm", e)
+                }
+                return@w null
+        })
+    }
 }
 open class CourseParamsJSONObject : UTSJSONObject() {
     open lateinit var course: String
@@ -505,5 +564,23 @@ open class CoreByJs : Core {
     }
     public open suspend fun getDashboardInsightByJs(): Deferred<DashboardInsightResponse> {
         return toDeferred(this.getDashboardInsight())
+    }
+    public open fun getWakeUpConfigDataByJs(): UTSJSONObject {
+        return this.getWakeUpConfigData()
+    }
+    public open fun saveConfigFullByJs(buffer: Int, noClassHr: Int, noClassMin: Int, overrideHr: Int, overrideMin: Int, overrideDate: String, enabled: Boolean): Boolean {
+        return this.saveConfigFull(buffer, noClassHr, noClassMin, overrideHr, overrideMin, overrideDate, enabled)
+    }
+    public open fun setOneTimeOverrideSyncByJs(hour: Int, minute: Int, targetDate: String): Boolean {
+        return this.setOneTimeOverrideSync(hour, minute, targetDate)
+    }
+    public open fun clearOneTimeOverrideSyncByJs(): Boolean {
+        return this.clearOneTimeOverrideSync()
+    }
+    public open suspend fun getAlarmStatusAsyncByJs(): Deferred<UTSJSONObject?> {
+        return toDeferred(this.getAlarmStatusAsync())
+    }
+    public open suspend fun requestSetAlarmAsyncByJs(): Deferred<UTSJSONObject?> {
+        return toDeferred(this.requestSetAlarmAsync())
     }
 }

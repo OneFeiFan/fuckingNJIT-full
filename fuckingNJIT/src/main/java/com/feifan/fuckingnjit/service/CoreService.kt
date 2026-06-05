@@ -16,13 +16,19 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import com.alibaba.fastjson.JSON
 import com.feifan.fuckingnjit.R
+import com.feifan.fuckingnjit.decision.AlarmHelper
+import com.feifan.fuckingnjit.decision.AlarmInfo
+import com.feifan.fuckingnjit.decision.DecisionFacade
 import com.feifan.fuckingnjit.monitor.AccelerometerMonitor
 import com.feifan.fuckingnjit.monitor.AppUsageManager
 import com.feifan.fuckingnjit.monitor.AudioMonitorManager
 import com.feifan.fuckingnjit.monitor.SensorDataBufferManager
 import com.feifan.fuckingnjit.monitor.StepMonitorManager
 import com.feifan.fuckingnjit.utils.HeartbeatBus
+import com.feifan.fuckingnjit.utils.database.AppDataCenter
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -79,6 +85,38 @@ class CoreService : LifecycleService() {
 
         if (intent?.action == ACTION_TRIGGER_ENGINE) {
             dispatchTick()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    Log.d("HeartbeatService", "进入闹钟设置")
+                    // 1. 直接在底层调用决策引擎，拿最新数据
+                    val dashboardObj = DecisionFacade.getDashboardInsight(applicationContext)
+                    val dataObj = dashboardObj.getJSONObject("data")
+                    val alarmInfoJson = dataObj?.getJSONObject("alarmInfo") ?: return@launch
+
+                    // 2. 解析出 AlarmInfo
+                    val alarmInfo = JSON.parseObject(alarmInfoJson.toJSONString(), AlarmInfo::class.java)
+
+                    // 3. 从底层的 ObjectBox / Room 拿到记录的旧标志位
+                    val config = DecisionFacade.getWakeUpConfig()
+                    val lastLabel = config.lastAutoAlarmLabel
+
+                    // 4. 调用 AlarmHelper 进行静默同步
+                    val newLabel = AlarmHelper.autoSyncAlarm(applicationContext, alarmInfo, lastLabel)
+                    Log.d("HeartbeatService", "心跳已在底层静默更新闹钟: $newLabel")
+
+                    // 5. 如果返回了新标签（说明闹钟时间有变且设置成功），直接在底层存入数据库
+                    if (newLabel != null && newLabel != lastLabel) {
+                        // 根据你 AppDataCenter 的写法更新数据库
+                        AppDataCenter.updateSystemConfig {
+                            it.wakeUpConfig.lastAutoAlarmLabel = newLabel
+                        }
+                        Log.d("HeartbeatService", "心跳已在底层静默更新闹钟: $newLabel")
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Log.e("HeartbeatService", "静默闹钟同步失败: ${e.message}")
+                }
+            }
         } else if (!isRunning) {
             // 首次启动
             isRunning = true

@@ -129,5 +129,6 @@ data class WakeUpConfiguration(
     val oneTimeOverrideHour: Int = 0,       // 0 = 未设置特殊闹钟
     val oneTimeOverrideMinute: Int = 0,
     val oneTimeOverrideDate: String = "",   // 空 = 未设置 / 已过期
-    val alarmEnabled: Boolean = true
+    val alarmEnabled: Boolean = true,
+    var lastAutoAlarmLabel: String = ""
 )
