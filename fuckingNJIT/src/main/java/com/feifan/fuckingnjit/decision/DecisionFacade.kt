@@ -58,10 +58,10 @@ object DecisionFacade {
             val targetDay = tomorrow.dayOfWeek.value // java.time 中 1=周一, 7=周日，完美对应课表的 course.day
 
             val currentWeek = TodayScheduleManager.getCurrentWeek()
-// 跨周判定：如果今天是周日(7)，明天的课程应当属于下一周
+            // 跨周判定：如果今天是周日(7)，明天的课程应当属于下一周
             val tomorrowWeek = if (today.dayOfWeek.value == 7) currentWeek + 1 else currentWeek
 
-// 3. 筛选并排序明天的课程
+            // 筛选并排序明天的课程
             val tomorrowCourses = allValidCourses.filter { course ->
                 course.day == targetDay && course.weekList.contains(tomorrowWeek)
             }.sortedWith { c1, c2 ->
@@ -108,13 +108,6 @@ object DecisionFacade {
 
     /**
      * 获取当前起床配置
-     *
-     * UI 层调用示例：
-     * ```kotlin
-     * val config = DecisionFacade.getWakeUpConfig()
-     * // config.preClassBufferMinutes → 上课缓冲时间
-     * // config.noClassWakeUpHour → 无课日起床时间
-     * ```
      *
      * @return WakeUpConfiguration 若从未设置则返回默认配置
      */
@@ -233,20 +226,6 @@ object DecisionFacade {
      *
      * UI 层可用此方法展示"建议明天 07:15 起床，是否设置闹钟？"的确认卡片，
      * 用户确认后再调 requestSetAlarm() 执行实际操作
-     *
-     * 返回的 JSONObject 结构：
-     * ```json
-     * {
-     *   "status": "success",
-     *   "data": {
-     *     "suggestedWakeUpHour": 7,
-     *     "suggestedWakeUpMinute": 15,
-     *     "alarmType": "default",
-     *     "alarmLabel": "[劳逸结合模式] 明早 07:15 起床 · 高等数学 课前准备",
-     *     "canSetAlarm": true,
-     *     "reason": ""
-     *   }
-     * }
      * ```
      */
     suspend fun getAlarmStatus(appContext: Context): JSONObject = withContext(Dispatchers.IO) {

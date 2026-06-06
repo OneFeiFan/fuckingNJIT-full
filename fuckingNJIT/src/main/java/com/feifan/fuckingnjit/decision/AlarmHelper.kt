@@ -10,12 +10,10 @@ import java.util.Locale
 
 @Suppress("unused")
 object AlarmHelper {
-
-    // 定义我们专属的静默闹钟标志前缀
     private const val AUTO_ALARM_PREFIX = "[FNJIT-AUTO]"
 
     /**
-     * 原有方法：供前台 Vue UI 点击“立即确认闹钟”时使用
+     * 供前台 Vue UI 点击“立即确认闹钟”时使用
      * 保留弹窗 UI，让用户有明确的操作反馈
      */
     fun setSystemAlarm(context: Context, alarmInfo: AlarmInfo): Boolean {
@@ -37,7 +35,7 @@ object AlarmHelper {
     }
 
     /**
-     * 新增方法：供后台主心跳或静默刷新调用 (Sweep & Replace 策略)
+     * 供后台主心跳或静默刷新调用
      *
      * @param context Context
      * @param alarmInfo 决策引擎计算出的最新闹钟信息
@@ -61,10 +59,6 @@ object AlarmHelper {
         }
 
         try {
-            // ==========================================
-            // 第一步：先加新闹钟（最高优保障）
-            // 此时系统闹钟 App 没有在处理任何事情，瞬间秒建！
-            // ==========================================
             val setIntent = Intent(AlarmClock.ACTION_SET_ALARM).apply {
                 putExtra(AlarmClock.EXTRA_HOUR, hour)
                 putExtra(AlarmClock.EXTRA_MINUTES, minute)
@@ -76,17 +70,8 @@ object AlarmHelper {
             context.startActivity(setIntent)
             Log.d("AlarmHelper", "已优先发送静默创建新闹钟指令: $newLabel")
 
-            // ==========================================
-            // 第二步：深呼吸（留出系统处理时间）
-            // 给系统闹钟 2~3 秒的时间去把它新建闹钟的逻辑跑完。
-            // 因为这段代码跑在 IO 协程里，所以这里的 sleep 绝对不会卡顿主界面的 UI
-            // ==========================================
             Thread.sleep(2500)
 
-            // ==========================================
-            // 第三步：后删旧闹钟（低优维护）
-            // 根据上一次存下来的旧标签，精准关闭昨天的闹钟
-            // ==========================================
             if (!lastSyncedLabel.isNullOrEmpty()) {
                 val dismissIntent = Intent(AlarmClock.ACTION_DISMISS_ALARM).apply {
                     putExtra(AlarmClock.EXTRA_ALARM_SEARCH_MODE, AlarmClock.ALARM_SEARCH_MODE_LABEL)

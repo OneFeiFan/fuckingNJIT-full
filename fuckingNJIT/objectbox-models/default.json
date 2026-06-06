@@ -1,0 +1,267 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:4498997653483525601",
+      "lastPropertyId": "7:2827971510119020881",
+      "name": "AppSystem",
+      "properties": [
+        {
+          "id": "1:3973426464502740799",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:1672841268197087834",
+          "name": "currentUserId",
+          "type": 9
+        },
+        {
+          "id": "3:2996006800847594304",
+          "name": "semesterStartDateMs",
+          "type": 6
+        },
+        {
+          "id": "4:3581646422950645758",
+          "name": "currentWeek",
+          "type": 5
+        },
+        {
+          "id": "5:2538625346682763116",
+          "name": "wifiAuthType",
+          "type": 9
+        },
+        {
+          "id": "6:2331908617811661696",
+          "name": "smartUpdate",
+          "type": 1
+        },
+        {
+          "id": "7:2827971510119020881",
+          "name": "wakeUpConfig",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:1716432565758240698",
+      "lastPropertyId": "8:6183591788715568607",
+      "name": "ClassFocusRecord",
+      "properties": [
+        {
+          "id": "1:5100796662583561313",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3186189959105442902",
+          "name": "courseId",
+          "indexId": "1:1503590021089400242",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:329585404480953122",
+          "name": "courseName",
+          "type": 9
+        },
+        {
+          "id": "4:575410199280994021",
+          "name": "startTime",
+          "type": 6
+        },
+        {
+          "id": "5:8914033867442307556",
+          "name": "endTime",
+          "type": 6
+        },
+        {
+          "id": "6:5366206119583610200",
+          "name": "distractionDurationMills",
+          "type": 6
+        },
+        {
+          "id": "7:4800427351353946191",
+          "name": "isUploaded",
+          "type": 1
+        },
+        {
+          "id": "8:6183591788715568607",
+          "name": "dailyRecordId",
+          "indexId": "2:8300287245076351172",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "DailyRecord"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:1048359305906587268",
+      "lastPropertyId": "8:6463208899484507425",
+      "name": "DailyRecord",
+      "properties": [
+        {
+          "id": "1:5988542680995042894",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6620019280588506023",
+          "name": "dateStr",
+          "indexId": "3:5828922651852653877",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "3:4014167694313724435",
+          "name": "currentSteps",
+          "type": 5
+        },
+        {
+          "id": "4:6928871155950054212",
+          "name": "lastRawSteps",
+          "type": 7
+        },
+        {
+          "id": "5:7123017059666274706",
+          "name": "totalDistractionMins",
+          "type": 5
+        },
+        {
+          "id": "6:302262799824890530",
+          "name": "sleepStartTimeMs",
+          "type": 6
+        },
+        {
+          "id": "7:5551416822265191687",
+          "name": "wakeUpTimeMs",
+          "type": 6
+        },
+        {
+          "id": "8:6463208899484507425",
+          "name": "totalSleepMinutes",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:1016075055656497515",
+      "lastPropertyId": "3:1779375353653771898",
+      "name": "SleepSensorRecord",
+      "properties": [
+        {
+          "id": "1:2280632898247108882",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1120709918935947157",
+          "name": "timestamp",
+          "type": 6
+        },
+        {
+          "id": "3:1779375353653771898",
+          "name": "mixdata",
+          "type": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:1820096990967951820",
+      "lastPropertyId": "13:8038068475756369836",
+      "name": "User",
+      "properties": [
+        {
+          "id": "1:3224039441012138162",
+          "name": "uuid",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5592261984501454922",
+          "name": "id",
+          "indexId": "4:4904259365559202347",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:5507020263929850492",
+          "name": "password",
+          "type": 9
+        },
+        {
+          "id": "4:1685934458019579857",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "5:3830346044051512732",
+          "name": "yibanId",
+          "type": 9
+        },
+        {
+          "id": "6:4491289119992197890",
+          "name": "yibanPassword",
+          "type": 9
+        },
+        {
+          "id": "7:6696738386194004949",
+          "name": "storePassword",
+          "type": 1
+        },
+        {
+          "id": "8:8914703539326091512",
+          "name": "currentAppMode",
+          "type": 9
+        },
+        {
+          "id": "9:4972715009743627385",
+          "name": "gpa",
+          "type": 9
+        },
+        {
+          "id": "10:8708864094480683328",
+          "name": "academicProgress",
+          "type": 9
+        },
+        {
+          "id": "11:6570060229570236116",
+          "name": "scores",
+          "type": 9
+        },
+        {
+          "id": "12:8619987167407993614",
+          "name": "curriculums",
+          "type": 9
+        },
+        {
+          "id": "13:8038068475756369836",
+          "name": "localCurriculums",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "5:1820096990967951820",
+  "lastIndexId": "4:4904259365559202347",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

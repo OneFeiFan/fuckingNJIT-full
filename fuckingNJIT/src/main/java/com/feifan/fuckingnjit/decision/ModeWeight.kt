@@ -39,8 +39,8 @@ enum class AppMode(
     val weight: ModeWeight,
     val intervention: InterventionConfig
 ) {
-    /** 学霸冲刺模式：高学习权重、低健康权重、严格干预 */
-    SCHOLAR_MODE("学霸冲刺模式", ModeWeight(1.0f, 0.2f), InterventionConfig(2, 1, 3)),
+    /** 学习模式：高学习权重、低健康权重、严格干预 */
+    SCHOLAR_MODE("学习模式", ModeWeight(1.0f, 0.2f), InterventionConfig(2, 1, 3)),
 
     /** 劳逸结合模式：学习与健康均衡、中等干预 */
     BALANCE_MODE("劳逸结合模式", ModeWeight(0.5f, 0.5f), InterventionConfig(10, 10, 2)),

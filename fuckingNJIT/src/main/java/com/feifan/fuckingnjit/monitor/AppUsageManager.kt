@@ -384,7 +384,7 @@ class AppUsageManager : AccessibilityService() {
                         triggerVibration()
                         Toast.makeText(
                             applicationContext,
-                            "学霸模式提醒：专注时间，拒绝摸鱼！",
+                            "学习模式提醒：专注时间，拒绝摸鱼！",
                             Toast.LENGTH_SHORT
                         ).show()
 
