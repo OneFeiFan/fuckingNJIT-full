@@ -382,45 +382,6 @@ open class Core {
         )
     }
 
-    public open fun checkNotification(): Boolean {
-        return Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!).checkNotification()
-    }
-
-    public open fun requestNotificationService(): UTSPromise<Boolean> {
-        return UTSPromise(fun(resolve, reject) {
-            Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-                .requestNotificationServicePermission(fun(isGranted: Boolean) {
-                    if (isGranted) {
-                        resolve(true)
-                    } else {
-                        reject(false)
-                    }
-                }
-                )
-        }
-        )
-    }
-
-    public open fun checkScheduleExactAlarm(): Boolean {
-        return Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-            .checkScheduleExactAlarm()
-    }
-
-    public open fun requestExactAlarm(): UTSPromise<Boolean> {
-        return UTSPromise(fun(resolve, reject) {
-            Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-                .requestScheduleExactAlarm(fun(isGranted: Boolean) {
-                    if (isGranted) {
-                        resolve(true)
-                    } else {
-                        reject(false)
-                    }
-                }
-                )
-        }
-        )
-    }
-
     public open fun requestKeepAliveNormalPermissions(): UTSPromise<UTSArray<String>> {
         return UTSPromise(fun(resolve, reject) {
             Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
@@ -434,26 +395,6 @@ open class Core {
                 )
         }
         )
-    }
-
-    public open fun isIgnoringBatteryOptimizations(): Boolean {
-        return Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-            .isIgnoringBatteryOptimizations()
-    }
-
-    public open fun requestIgnoreBatteryOptimizations() {
-        Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-            .requestIgnoreBatteryOptimizations()
-    }
-
-    public open fun isAccessibilitySettingsOn(): Boolean {
-        return Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-            .isAccessibilitySettingsOn()
-    }
-
-    public open fun requestAccessibilityPermission() {
-        Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-            .requestAccessibilityPermission()
     }
 
     public open fun initYiBan(mobile: String, password: String): UTSPromise<UTSJSONObject> {
@@ -687,41 +628,11 @@ open class CoreByJs : Core {
         return toDeferred(this.requestRecordAudio())
     }
 
-    public open fun checkNotificationByJs(): Boolean {
-        return this.checkNotification()
-    }
-
-    public open suspend fun requestNotificationServiceByJs(): Deferred<Boolean> {
-        return toDeferred(this.requestNotificationService())
-    }
-
-    public open fun checkScheduleExactAlarmByJs(): Boolean {
-        return this.checkScheduleExactAlarm()
-    }
-
-    public open suspend fun requestExactAlarmByJs(): Deferred<Boolean> {
-        return toDeferred(this.requestExactAlarm())
-    }
 
     public open suspend fun requestKeepAliveNormalPermissionsByJs(): Deferred<UTSArray<String>> {
         return toDeferred(this.requestKeepAliveNormalPermissions())
     }
 
-    public open fun isIgnoringBatteryOptimizationsByJs(): Boolean {
-        return this.isIgnoringBatteryOptimizations()
-    }
-
-    public open fun requestIgnoreBatteryOptimizationsByJs() {
-        return this.requestIgnoreBatteryOptimizations()
-    }
-
-    public open fun isAccessibilitySettingsOnByJs(): Boolean {
-        return this.isAccessibilitySettingsOn()
-    }
-
-    public open fun requestAccessibilityPermissionByJs() {
-        return this.requestAccessibilityPermission()
-    }
 
     public open suspend fun initYiBanByJs(
         mobile: String,

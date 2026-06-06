@@ -16,9 +16,6 @@ import io.objectbox.query.QueryBuilder
  * 管理五类核心数据：
  * - **系统配置** ([AppSystem])：全局唯一记录（id=1），存储当前激活用户 ID 等应用级状态
  * - **用户信息** ([User])：多租户支持，每个登录过的用户各存一条
- * - **每日记录** ([DailyRecord])：按日期键值对存储，含睡眠、步数、专注度等综合数据
- * - **睡眠传感器** ([SleepSensorRecord])：高频原始采样点（加速度/音频），按时间戳索引
- * - **课程专注度** ([ClassFocusRecord])：每节课一条，支持上传状态标记与批量同步
  *
  * 所有 Box 实例采用 lazy 延迟初始化，物理数据库统一归拢到 `core_database` 文件夹。
  *
@@ -34,8 +31,6 @@ object AppDataCenter {
 
     /** 用户信息 Box，支持多用户共存 */
     private val userBox by lazy { boxStore!!.boxFor(User::class.java) }
-
-    /** 每日综合健康记录 Box，以 dateStr 为查询键 */
 
     /**
      * 初始化 ObjectBox 数据库实例。

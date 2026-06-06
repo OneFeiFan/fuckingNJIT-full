@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import com.feifan.fuckingnjit.R
+import com.feifan.fuckingnjit.service.CoreService
 import com.feifan.fuckingnjit.utils.DailyCourseSlot
 import com.feifan.fuckingnjit.utils.EduScheduleConfig
 import com.feifan.fuckingnjit.utils.HeartbeatBus
@@ -52,6 +53,35 @@ class CurriculumsWidgetProvider : AppWidgetProvider() {
         )
         private val IDS_TIME =
             intArrayOf(R.id.time_id_1, R.id.time_id_2, R.id.time_id_3, R.id.time_id_4)
+    }
+
+    /**
+     * 负责向 CoreService 发送点火指令
+     * @param force
+     * true  -> 无视状态强行投递指令（用于系统心跳滴答，触发 onStartCommand）
+     * false -> 仅在服务死亡时拉起服务（用于手动刷新时的兜底检测）
+     */
+    private fun pingEngine(context: Context, force: Boolean) {
+        // 【核心拦截】：如果是按需拉起，且服务本来就活着，直接 return，不产生任何性能开销
+        if (!force && CoreService.isRunning) {
+            Log.i(TAG, "检测到 CoreService 健康运行中，跳过按需拉起。")
+            return
+        }
+
+        Log.i(
+            TAG,
+            if (force) "心跳触发，投递引擎指令..." else "检测到引擎已停止，尝试重新拉起 CoreService..."
+        )
+
+        val serviceIntent = Intent(context, CoreService::class.java).apply {
+            action = "com.feifan.fuckingnjit.ACTION_TRIGGER_ENGINE"
+        }
+
+        try {
+            context.startForegroundService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "引擎点火失败", e)
+        }
     }
 
     /**
@@ -159,25 +189,36 @@ class CurriculumsWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         val action = intent.action
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        Log.i(TAG, "收到广播$action")
-        // 处理点击强制刷新
+        Log.i(TAG, "收到广播: $action")
+
+        // 1. 处理用户手动点击的强制刷新
         if (action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             if (intent.getBooleanExtra("FORCE_REFRESH", false)) {
+                Log.i(TAG, "用户手动请求刷新小部件 UI")
                 TodayScheduleManager.clearCache()
+
                 val extrasIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
                 if (extrasIds != null) {
                     onUpdate(context, appWidgetManager, extrasIds)
                 }
+
+                // 顺手做一次兜底健康检查：只在服务死掉时拉起
+                pingEngine(context, force = false)
             }
         }
 
-        // 处理新版引入的全局心跳滴答 (到点下课自动刷新 UI)
+        // 2. 处理心跳闹钟带来的全局滴答 (到点自动刷新)
         if (action == HeartbeatBus.ACTION_GLOBAL_TICK) {
+            Log.i(TAG, "心跳时间到，自动刷新小部件 UI")
             val componentName = ComponentName(context, CurriculumsWidgetProvider::class.java)
             val allIds = appWidgetManager.getAppWidgetIds(componentName)
+
             if (allIds.isNotEmpty()) {
                 onUpdate(context, appWidgetManager, allIds)
             }
+
+            // 必须强行传递下去，触发 onStartCommand，以确保下一次闹钟被注册！
+            pingEngine(context, force = true)
         }
     }
 

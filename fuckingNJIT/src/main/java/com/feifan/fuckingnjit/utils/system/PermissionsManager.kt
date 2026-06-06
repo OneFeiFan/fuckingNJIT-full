@@ -1,13 +1,8 @@
 package com.feifan.fuckingnjit.utils.system
 
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.PowerManager
-import android.provider.Settings
-import androidx.core.net.toUri
-import com.feifan.fuckingnjit.monitor.AppUsageManager
 import com.feifan.fuckingnjit.service.CoreService
 import com.feifan.fuckingnjit.utils.database.AppDataCenter
 import com.hjq.permissions.XXPermissions
@@ -72,10 +67,7 @@ class PermissionsManager private constructor(private var context: Context) {
 
     private fun getKeepAlivePermissionList(): List<IPermission> {
         return listOf(
-            PermissionLists.getRecordAudioPermission(),// 麦克风权限
-            PermissionLists.getNotificationServicePermission(),//通知权限
             PermissionLists.getScheduleExactAlarmPermission(),// 精确闹钟权限
-            PermissionLists.getActivityRecognitionPermission()// 安卓10之后获取运动数据权限
         )
     }
 
@@ -96,79 +88,6 @@ class PermissionsManager private constructor(private var context: Context) {
     fun requestRequestInstallPackage(callback: (Boolean) -> Unit) =
         requestSinglePermission(PermissionLists.getRequestInstallPackagesPermission(), callback)
 
-    // 通知权限
-    fun checkNotification(): Boolean =
-        XXPermissions.isGrantedPermission(
-            context,
-            PermissionLists.getNotificationServicePermission()
-        )
-
-    fun requestNotificationServicePermission(callback: (Boolean) -> Unit) =
-        requestSinglePermission(PermissionLists.getNotificationServicePermission(), callback)
-
-    // 精确闹钟
-    fun checkScheduleExactAlarm(): Boolean =
-        XXPermissions.isGrantedPermission(
-            context,
-            PermissionLists.getScheduleExactAlarmPermission()
-        )
-
-    fun requestScheduleExactAlarm(callback: (Boolean) -> Unit) =
-        requestSinglePermission(PermissionLists.getScheduleExactAlarmPermission(), callback)
-
-    // 计步器
-    fun checkActivityRecognition(): Boolean {
-        return XXPermissions.isGrantedPermission(
-            context,
-            PermissionLists.getActivityRecognitionPermission()
-        )
-    }
-
-    fun requestActivityRecognition(callback: (Boolean) -> Unit) =
-        requestSinglePermission(PermissionLists.getActivityRecognitionPermission(), callback)
-
-    // 是否忽略电池优化 (后台保活关键)
-    fun isIgnoringBatteryOptimizations(): Boolean {
-        val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        return pm.isIgnoringBatteryOptimizations(context.packageName)
-    }
-
-    // 申请忽略电池优化
-    fun requestIgnoreBatteryOptimizations() {
-        try {
-            // 通过一些手段直接打开请求弹窗
-            // 可以绕过一点国产rom的魔改
-            val intent = Intent().apply {
-                component = ComponentName(
-                    "com.android.settings",
-                    "com.android.settings.fuelgauge.RequestIgnoreBatteryOptimizations"
-                )
-                data = "package:${context.packageName}".toUri()
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            // 兜底方案，使用标准的请求
-            val fallbackIntent =
-                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            context.startActivity(fallbackIntent)
-        }
-    }
-
-    //检查无障碍服务是否开启
-    fun isAccessibilitySettingsOn(): Boolean {
-        return !AppUsageManager.isServiceZombie(context)
-    }
-
-    // 跳转无障碍设置列表页
-    fun requestAccessibilityPermission() {
-        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
-    }
 
     private fun requestSinglePermission(permission: IPermission, callback: (Boolean) -> Unit) {
         XXPermissions.with(context)

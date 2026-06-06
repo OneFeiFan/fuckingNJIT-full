@@ -6,7 +6,7 @@ import io.objectbox.annotation.Id
 /**
  * 应用全局配置实体
  *
- * 全局单例，id 固定为 1，存储学期信息、网络认证策略、起床闹钟配置等。
+ * 全局单例，id 固定为 1，存储学期信息、网络认证策略。
  *
  * @param id 主键，全局固定为 1L
  * @param currentUserId 当前活跃的教务账号标识
@@ -19,7 +19,6 @@ import io.objectbox.annotation.Id
 data class AppSystem(
     @Id(assignable = true)
     var id: Long = 1L,
-
     var currentUserId: String = "",
     var semesterStartDateMs: Long = 0L,
     var currentWeek: Int = 1,
