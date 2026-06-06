@@ -56,7 +56,7 @@ dependencies {
     implementation libs.jsoup
     implementation libs.okhttp
     implementation libs.xxpermissions
-    implementation (libs.android.loading.animation){
+    implementation(libs.android.loading.animation) {
         exclude group: 'pl.droidsonroids.gif', module: 'android-gif-drawable'
     }
     implementation libs.smartupdatedemo

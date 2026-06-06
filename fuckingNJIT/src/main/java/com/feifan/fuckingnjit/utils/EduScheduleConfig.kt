@@ -87,7 +87,8 @@ object EduScheduleConfig {
         val dateMs = AppDataCenter.getSystemConfig().semesterStartDateMs
         return try {
             if (dateMs != 0L) {
-                Instant.ofEpochMilli(dateMs).atZone(ZoneId.systemDefault()).toLocalDate().format(FORMATTER)
+                Instant.ofEpochMilli(dateMs).atZone(ZoneId.systemDefault()).toLocalDate()
+                    .format(FORMATTER)
             } else "2025-02-17"
         } catch (e: Exception) {
             e.printStackTrace()

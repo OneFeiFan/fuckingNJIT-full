@@ -16,23 +16,15 @@ import android.util.Log
 import android.util.LruCache
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityWindowInfo
-import android.widget.Toast
-import com.feifan.fuckingnjit.decision.AppMode
 import com.feifan.fuckingnjit.utils.TodayScheduleManager
-import com.feifan.fuckingnjit.utils.database.AppCategoryRepository
-import com.feifan.fuckingnjit.utils.database.AppDataCenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.ceil
 import kotlin.math.pow
 
 class AppUsageManager : AccessibilityService() {
@@ -91,21 +83,6 @@ class AppUsageManager : AccessibilityService() {
          * @param pkg 目标应用包名
          * @return 格式化后的应用显示文本
          */
-        suspend fun getAppName(context: Context, pkg: String): String {
-            if (pkg.isEmpty()) return "等待检测..."
-            val label = appLabelCache.getOrPut(pkg) {
-                try {
-                    val pm = context.packageManager
-                    val appInfo = pm.getApplicationInfo(pkg, 0)
-                    appInfo.loadLabel(pm).toString()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    if (pkg.contains(".")) pkg.substringAfterLast(".") else pkg
-                }
-            }
-            val category = AppCategoryRepository.getCategory(context, pkg) ?: "未知"
-            return "$label [$category]"
-        }
 
         /**
          * 检测无障碍服务是否处于"假死"状态
@@ -303,19 +280,6 @@ class AppUsageManager : AccessibilityService() {
         // 检查是否在上课时间
         if (!TodayScheduleManager.isCurrentlyInClass()) return
 
-        val category = AppCategoryRepository.getCategory(applicationContext, pkgName) ?: "未知"
-        val isGroupA = CATEGORY_GROUP_A.contains(category)
-        val isGroupB = CATEGORY_GROUP_B.contains(category)
-
-        // 仅拦截 A组(娱乐) 和 B组(通信)
-        if (!(isGroupA || isGroupB)) return
-
-        // 获取当前模式配置
-        val currentMode = AppDataCenter.getCurrentUser()?.currentAppMode ?: AppMode.BALANCE_MODE
-
-        val intervention = currentMode.intervention // 处理摸鱼的配置
-        val baseToleranceMs = intervention.toleranceMins * 60 * 1000L //单次摸鱼容忍时长ms
-        val cooldownMs = intervention.cooldownMins * 60 * 1000L// 冷却时长ms
 
         // 取消旧任务
         interceptJob?.cancel()
@@ -325,75 +289,18 @@ class AppUsageManager : AccessibilityService() {
             val now = System.currentTimeMillis()
             val timeSinceLastAction = now - lastInterventionTime
 
-            // 如果距离上次警告已经过去了超过 2 倍的冷却时间，说明学生认真听课了很久，重置容忍度
-            if (lastInterventionTime > 0L && timeSinceLastAction > (cooldownMs * 2)) {
-                continuousViolationCount = 0
-                Log.d(TAG, "干预系统：表现良好，容忍度已重置。")
-            }
-
             // 容忍度梯度递减
             // 每次违规，容忍时长变为上一次的 70%
             val decayFactor = 0.7.pow(continuousViolationCount.toDouble())
-            var currentToleranceMs = (baseToleranceMs * decayFactor).toLong()
+
 
             // 设定容忍度保底底线：最少 1 分钟
             val minToleranceMs = 1 * 60 * 1000L
-            if (currentToleranceMs < minToleranceMs) {
-                currentToleranceMs = minToleranceMs
-            }
 
-            // 如果还在冷却期内，则先等待冷却期结束，再叠加本次的容忍时间
-            val actualDelay = if (lastInterventionTime > 0L && timeSinceLastAction < cooldownMs) {
-                (cooldownMs - timeSinceLastAction) + currentToleranceMs
-            } else {
-                currentToleranceMs
-            }
-
-            Log.d(
-                TAG,
-                "干预系统：倒计时已开启。当前连犯次数: $continuousViolationCount, 本次等待: ${actualDelay / 1000}秒"
-            )
-
-            // 开启倒计时
-            delay(actualDelay)
 
             // 超时执行动作
             withContext(Dispatchers.Main) {
-                when (intervention.actionLevel) {
-                    1 -> {
-                        // 健康模式 (静默关怀) - 不震动，不阻断
-                        Toast.makeText(
-                            applicationContext,
-                            "健康提醒：注意坐姿，让眼睛休息一下吧~",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
 
-                    2 -> {
-                        // 劳逸结合模式 (警告) - 震动 + 提示
-                        triggerVibration()
-                        Toast.makeText(
-                            applicationContext,
-                            "走神时间有点久了，快回到学习状态！",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-
-                    3 -> {
-                        // 学习模式 (强阻断) - 震动 + 提示 + 判断是否退回桌面
-                        triggerVibration()
-                        Toast.makeText(
-                            applicationContext,
-                            "学习模式提醒：专注时间，拒绝摸鱼！",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        // 仅 A 组执行 回到桌面
-                        if (isGroupA) {
-                            performGlobalAction(GLOBAL_ACTION_HOME)
-                        }
-                    }
-                }
             }
 
             // 更新最后干预时间并增加"仇恨值"
@@ -472,38 +379,7 @@ class AppUsageManager : AccessibilityService() {
             val currentClass = TodayScheduleManager.getCurrentClassSlot()
 
             if (currentClass != null) {
-                val category =
-                    AppCategoryRepository.getCategory(applicationContext, lastPackageName) ?: "未知"
 
-                // A组和B组统统算作违规时长进行扣分
-                if (ILLEGAL_CATEGORIES.contains(category)) {
-                    val durationMins = ceil(durationMs / 60000.0).toInt()
-
-                    val today = LocalDate.now()
-                    val startMs =
-                        today.atTime(currentClass.startTime).atZone(ZoneId.systemDefault())
-                            .toInstant().toEpochMilli()
-                    val endMs = today.atTime(currentClass.endTime).atZone(ZoneId.systemDefault())
-                        .toInstant().toEpochMilli()
-
-                    Log.w(
-                        TAG,
-                        "🔴 摸鱼警告！上课 [${currentClass.courseName}] 玩 [$lastPackageName] 达 $durationMins 分钟！"
-                    )
-                    // 保存总的走神时长
-                    AppDataCenter.updateTodayRecord { record ->
-                        record.totalDistractionMins += durationMins
-                        Log.d(TAG, "💾 今日累计摸鱼已达: ${record.totalDistractionMins} 分钟")
-                    }
-                    // 将走神时长和对应课程存入数据库
-                    AppDataCenter.addDistractionTime(
-                        courseId = currentClass.id,
-                        courseName = currentClass.courseName,
-                        startTime = startMs,
-                        endTime = endMs,
-                        addedMills = durationMs,// 传入精确的毫秒数
-                    )
-                }
             }
         }
 

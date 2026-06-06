@@ -6,7 +6,6 @@ import android.webkit.WebViewClient
 import com.feifan.fuckingnjit.utils.Manager
 import com.feifan.fuckingnjit.utils.database.AppDataCenter
 import com.feifan.fuckingnjit.utils.system.SystemActionHelper
-import io.dcloud.common.adapter.util.Logger
 
 /**
  * 登录流程 WebViewClient 实现

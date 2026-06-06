@@ -331,18 +331,22 @@ object TestCourseGenerator {
             in 0..49 -> { // 全程 50%
                 Pair((1..TEACHING_WEEKS).toList(), "${TEACHING_WEEKS}周")
             }
+
             in 50..61 -> { // 单周 12%
                 val odds = (1..TEACHING_WEEKS).filter { it % 2 != 0 }
                 Pair(odds, "1-$TEACHING_WEEKS(单)周")
             }
+
             in 62..73 -> { // 双周 12%
                 val evens = (2..TEACHING_WEEKS).filter { it % 2 == 0 }
                 Pair(evens, "2-$TEACHING_WEEKS(双)周")
             }
+
             in 74..86 -> { // 前半学期 13%
                 val half = TEACHING_WEEKS / 2
                 Pair((1..half).toList(), "1-${half}周")
             }
+
             else -> { // 后半学期 14%
                 val mid = TEACHING_WEEKS / 2 + 1
                 Pair((mid..TEACHING_WEEKS).toList(), "${mid}-${TEACHING_WEEKS}周")

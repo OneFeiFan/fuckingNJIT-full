@@ -1,8 +1,5 @@
 package com.feifan.fuckingnjit.model
 
-import com.alibaba.fastjson.JSON
-import com.feifan.fuckingnjit.decision.WakeUpConfiguration
-import io.objectbox.annotation.Convert
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
 
@@ -17,7 +14,6 @@ import io.objectbox.annotation.Id
  * @param currentWeek 当前教学周次
  * @param wifiAuthType 校园网自动认证策略标识
  * @param smartUpdate 智能增量更新开关
- * @param wakeUpConfig 起床与闹钟相关配置
  */
 @Entity
 data class AppSystem(
@@ -29,26 +25,4 @@ data class AppSystem(
     var currentWeek: Int = 1,
     var wifiAuthType: String = "",
     var smartUpdate: Boolean = true,
-    @Convert(converter = WakeUpConfigConverter::class, dbType = String::class)
-    var wakeUpConfig: WakeUpConfiguration = WakeUpConfiguration()
 )
-
-/**
- * WakeUpConfiguration ↔ JSON 字符串 的 ObjectBox 属性转换器
- */
-class WakeUpConfigConverter :
-    io.objectbox.converter.PropertyConverter<WakeUpConfiguration, String> {
-    override fun convertToEntityProperty(databaseValue: String?): WakeUpConfiguration {
-        if (databaseValue.isNullOrEmpty()) return WakeUpConfiguration()
-        return try {
-            JSON.parseObject(databaseValue, WakeUpConfiguration::class.java)
-                ?: WakeUpConfiguration()
-        } catch (_: Exception) {
-            WakeUpConfiguration()
-        }
-    }
-
-    override fun convertToDatabaseValue(entityProperty: WakeUpConfiguration?): String {
-        return if (entityProperty == null) "" else JSON.toJSONString(entityProperty)
-    }
-}

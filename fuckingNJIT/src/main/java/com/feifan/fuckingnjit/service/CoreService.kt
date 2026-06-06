@@ -16,22 +16,12 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
-import com.alibaba.fastjson.JSON
 import com.feifan.fuckingnjit.R
-import com.feifan.fuckingnjit.decision.AlarmHelper
-import com.feifan.fuckingnjit.decision.AlarmInfo
-import com.feifan.fuckingnjit.decision.DecisionFacade
-import com.feifan.fuckingnjit.monitor.AccelerometerMonitor
 import com.feifan.fuckingnjit.monitor.AppUsageManager
-import com.feifan.fuckingnjit.monitor.AudioMonitorManager
-import com.feifan.fuckingnjit.monitor.SensorDataBufferManager
-import com.feifan.fuckingnjit.monitor.StepMonitorManager
 import com.feifan.fuckingnjit.utils.HeartbeatBus
-import com.feifan.fuckingnjit.utils.database.AppDataCenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 /**
  * 核心前台服务
@@ -49,8 +39,6 @@ class CoreService : LifecycleService() {
     private val NOTIFICATION_ID = 1
     private val ACTION_TRIGGER_ENGINE = "com.feifan.fuckingnjit.ACTION_TRIGGER_ENGINE"
 
-    private lateinit var audioManager: AudioMonitorManager
-    private lateinit var motionDetector: AccelerometerMonitor
     private lateinit var alarmManager: AlarmManager
 
     private var isRunning = false
@@ -63,12 +51,6 @@ class CoreService : LifecycleService() {
         super.onCreate()
 
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-
-        // 初始化监控模块
-        audioManager = AudioMonitorManager(this)
-        audioManager.init()
-        motionDetector = AccelerometerMonitor(this)
-        StepMonitorManager.init(this)
 
         createNotificationChannel()
         val pm = getSystemService(POWER_SERVICE) as PowerManager
@@ -89,29 +71,22 @@ class CoreService : LifecycleService() {
                 try {
                     Log.d("HeartbeatService", "进入闹钟设置")
                     // 1. 直接在底层调用决策引擎，拿最新数据
-                    val dashboardObj = DecisionFacade.getDashboardInsight(applicationContext)
-                    val dataObj = dashboardObj.getJSONObject("data")
-                    val alarmInfoJson = dataObj?.getJSONObject("alarmInfo") ?: return@launch
+
 
                     // 2. 解析出 AlarmInfo
-                    val alarmInfo = JSON.parseObject(alarmInfoJson.toJSONString(), AlarmInfo::class.java)
+
 
                     // 3. 从底层的 ObjectBox / Room 拿到记录的旧标志位
-                    val config = DecisionFacade.getWakeUpConfig()
-                    val lastLabel = config.lastAutoAlarmLabel
+
 
                     // 4. 调用 AlarmHelper 进行静默同步
-                    val newLabel = AlarmHelper.autoSyncAlarm(applicationContext, alarmInfo, lastLabel)
-                    Log.d("HeartbeatService", "心跳已在底层静默更新闹钟: $newLabel")
+
 
                     // 5. 如果返回了新标签（说明闹钟时间有变且设置成功），直接在底层存入数据库
-                    if (newLabel != null && newLabel != lastLabel) {
-                        // 根据你 AppDataCenter 的写法更新数据库
-                        AppDataCenter.updateSystemConfig {
-                            it.wakeUpConfig.lastAutoAlarmLabel = newLabel
-                        }
-                        Log.d("HeartbeatService", "心跳已在底层静默更新闹钟: $newLabel")
-                    }
+
+                    // 根据你 AppDataCenter 的写法更新数据库
+
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Log.e("HeartbeatService", "静默闹钟同步失败: ${e.message}")
@@ -142,18 +117,12 @@ class CoreService : LifecycleService() {
             try {
                 Log.i(TAG, "开始执行心跳采样管线...")
 
-                val motionScore = motionDetector.captureEnergyScore(250L)
-                val noiseDb = audioManager.captureSnapshot(250L)
 
                 // 获取当前应用信息
                 val pkgName = AppUsageManager.getForegroundPackage()
-                val appName = AppUsageManager.getAppName(this@CoreService, pkgName)
 
-                val mixed = if (motionScore > 0) noiseDb / motionScore else 0.0
-                SensorDataBufferManager.addRecord(mixed)
 
                 // 更新 UI
-                updateNotification(appName, noiseDb, motionScore)
 
                 // 发射全局广播 主要是驱动小部件
                 val tickIntent = Intent(HeartbeatBus.ACTION_GLOBAL_TICK).apply {
@@ -198,38 +167,6 @@ class CoreService : LifecycleService() {
             triggerTimeMs,
             pendingIntent
         )
-    }
-
-    /**
-     * 更新前台通知内容
-     *
-     * 仅在内容发生实际变化时才重新提交通知，避免频繁刷新导致的闪烁。
-     *
-     * @param appName 当前前台应用名称
-     * @param currentNoise 当前环境噪音 dBFS 值
-     * @param currentMotion 当前体动能量值
-     */
-    private fun updateNotification(appName: String, currentNoise: Double, currentMotion: Double) {
-        val noiseText = if (audioManager.isMicrophoneOccupied) "⏸️ 避让" else "${
-            String.format(
-                Locale.ROOT,
-                "%.1f",
-                currentNoise
-            )
-        } dBFS"
-
-        val content = """
-            📱 前台: ${appName.ifEmpty { "检测中..." }}
-            🔊 噪音: $noiseText
-            🛌 动作: ${String.format(Locale.ROOT, "%.1f", currentMotion)}
-            🖥️ 屏幕: $lastScreenState
-        """.trimIndent()
-
-        if (content != lastNotifContent) {
-            lastNotifContent = content
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.notify(NOTIFICATION_ID, createNotification("运行中", content))
-        }
     }
 
     /**
@@ -319,11 +256,6 @@ class CoreService : LifecycleService() {
         val pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         alarmManager.cancel(pendingIntent)
 
-        if (::audioManager.isInitialized) audioManager.release()
-        if (::motionDetector.isInitialized) {
-            motionDetector.release()
-        }
-        StepMonitorManager.release()
 
         wakeLock?.let { if (it.isHeld) it.release() }
 
@@ -333,7 +265,6 @@ class CoreService : LifecycleService() {
             e.printStackTrace()
         }
 
-        SensorDataBufferManager.flushToDatabase()
         super.onDestroy()
     }
 }

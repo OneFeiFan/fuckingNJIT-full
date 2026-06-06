@@ -38,140 +38,6 @@
           "id": "6:2331908617811661696",
           "name": "smartUpdate",
           "type": 1
-        },
-        {
-          "id": "7:2827971510119020881",
-          "name": "wakeUpConfig",
-          "type": 9
-        }
-      ],
-      "relations": []
-    },
-    {
-      "id": "2:1716432565758240698",
-      "lastPropertyId": "8:6183591788715568607",
-      "name": "ClassFocusRecord",
-      "properties": [
-        {
-          "id": "1:5100796662583561313",
-          "name": "id",
-          "type": 6,
-          "flags": 1
-        },
-        {
-          "id": "2:3186189959105442902",
-          "name": "courseId",
-          "indexId": "1:1503590021089400242",
-          "type": 9,
-          "flags": 2048
-        },
-        {
-          "id": "3:329585404480953122",
-          "name": "courseName",
-          "type": 9
-        },
-        {
-          "id": "4:575410199280994021",
-          "name": "startTime",
-          "type": 6
-        },
-        {
-          "id": "5:8914033867442307556",
-          "name": "endTime",
-          "type": 6
-        },
-        {
-          "id": "6:5366206119583610200",
-          "name": "distractionDurationMills",
-          "type": 6
-        },
-        {
-          "id": "7:4800427351353946191",
-          "name": "isUploaded",
-          "type": 1
-        },
-        {
-          "id": "8:6183591788715568607",
-          "name": "dailyRecordId",
-          "indexId": "2:8300287245076351172",
-          "type": 11,
-          "flags": 520,
-          "relationTarget": "DailyRecord"
-        }
-      ],
-      "relations": []
-    },
-    {
-      "id": "3:1048359305906587268",
-      "lastPropertyId": "8:6463208899484507425",
-      "name": "DailyRecord",
-      "properties": [
-        {
-          "id": "1:5988542680995042894",
-          "name": "id",
-          "type": 6,
-          "flags": 1
-        },
-        {
-          "id": "2:6620019280588506023",
-          "name": "dateStr",
-          "indexId": "3:5828922651852653877",
-          "type": 9,
-          "flags": 2080
-        },
-        {
-          "id": "3:4014167694313724435",
-          "name": "currentSteps",
-          "type": 5
-        },
-        {
-          "id": "4:6928871155950054212",
-          "name": "lastRawSteps",
-          "type": 7
-        },
-        {
-          "id": "5:7123017059666274706",
-          "name": "totalDistractionMins",
-          "type": 5
-        },
-        {
-          "id": "6:302262799824890530",
-          "name": "sleepStartTimeMs",
-          "type": 6
-        },
-        {
-          "id": "7:5551416822265191687",
-          "name": "wakeUpTimeMs",
-          "type": 6
-        },
-        {
-          "id": "8:6463208899484507425",
-          "name": "totalSleepMinutes",
-          "type": 5
-        }
-      ],
-      "relations": []
-    },
-    {
-      "id": "4:1016075055656497515",
-      "lastPropertyId": "3:1779375353653771898",
-      "name": "SleepSensorRecord",
-      "properties": [
-        {
-          "id": "1:2280632898247108882",
-          "name": "id",
-          "type": 6,
-          "flags": 1
-        },
-        {
-          "id": "2:1120709918935947157",
-          "name": "timestamp",
-          "type": 6
-        },
-        {
-          "id": "3:1779375353653771898",
-          "name": "mixdata",
-          "type": 8
         }
       ],
       "relations": []
@@ -220,11 +86,6 @@
           "type": 1
         },
         {
-          "id": "8:8914703539326091512",
-          "name": "currentAppMode",
-          "type": 9
-        },
-        {
           "id": "9:4972715009743627385",
           "name": "gpa",
           "type": 9
@@ -259,9 +120,39 @@
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
-  "retiredEntityUids": [],
-  "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredEntityUids": [
+    1716432565758240698,
+    1016075055656497515,
+    1048359305906587268
+  ],
+  "retiredIndexUids": [
+    1503590021089400242,
+    8300287245076351172,
+    5828922651852653877
+  ],
+  "retiredPropertyUids": [
+    2827971510119020881,
+    8914703539326091512,
+    5100796662583561313,
+    3186189959105442902,
+    329585404480953122,
+    575410199280994021,
+    8914033867442307556,
+    5366206119583610200,
+    4800427351353946191,
+    6183591788715568607,
+    2280632898247108882,
+    1120709918935947157,
+    1779375353653771898,
+    5988542680995042894,
+    6620019280588506023,
+    4014167694313724435,
+    6928871155950054212,
+    7123017059666274706,
+    302262799824890530,
+    5551416822265191687,
+    6463208899484507425
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

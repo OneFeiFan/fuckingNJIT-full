@@ -3,7 +3,6 @@ package com.feifan.fuckingnjit.model
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
-import com.feifan.fuckingnjit.decision.AppMode
 import com.feifan.fuckingnjit.utils.security.RSAPasswordConverter
 import io.objectbox.annotation.Convert
 import io.objectbox.annotation.Entity
@@ -30,8 +29,6 @@ data class User(
     @Convert(converter = RSAPasswordConverter::class, dbType = String::class)
     var yibanPassword: String = "",
     var storePassword: Boolean = true,
-    @Convert(converter = AppModeConverter::class, dbType = String::class)
-    var currentAppMode: AppMode = AppMode.BALANCE_MODE,
     var gpa: String = "0",
     @Convert(converter = JSONObjectConverter::class, dbType = String::class)
     var academicProgress: JSONObject = JSONObject(),
@@ -78,18 +75,5 @@ class JSONArrayConverter : PropertyConverter<JSONArray?, String?> {
             return null
         }
         return entityProperty.toJSONString()
-    }
-}
-
-/**
- * AppMode 枚举 ↔ 名称字符串 的 ObjectBox 属性转换器
- */
-class AppModeConverter : PropertyConverter<AppMode, String> {
-    override fun convertToEntityProperty(databaseValue: String?): AppMode {
-        return AppMode.fromName(databaseValue)
-    }
-
-    override fun convertToDatabaseValue(entityProperty: AppMode?): String {
-        return entityProperty?.name ?: AppMode.BALANCE_MODE.name
     }
 }

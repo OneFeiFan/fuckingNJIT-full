@@ -1,9 +1,7 @@
 package com.feifan.fuckingnjit.service.impl
 
 import android.content.Context
-import android.util.Log
 import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.feifan.fuckingnjit.model.User
 import com.feifan.fuckingnjit.service.UserManager
