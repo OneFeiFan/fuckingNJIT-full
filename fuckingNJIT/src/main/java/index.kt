@@ -18,7 +18,6 @@ import com.feifan.fuckingnjit.widget.CurriculumsWidget
 import io.dcloud.uts.JSON
 import io.dcloud.uts.JsonNotNull
 import io.dcloud.uts.UTSAndroid
-import io.dcloud.uts.UTSArray
 import io.dcloud.uts.UTSError
 import io.dcloud.uts.UTSJSONObject
 import io.dcloud.uts.UTSObject
@@ -51,72 +50,6 @@ open class RestoreCourse(
     open var day: Int = 0,
     @JsonNotNull
     open var start: Int = 0,
-) : UTSObject()
-typealias AppMode = String
-typealias InsightLevel = String
-
-open class DashboardFactors(
-    @JsonNotNull
-    open var courseStress: Number,
-    @JsonNotNull
-    open var physicalState: Number,
-    @JsonNotNull
-    open var focusCost: Number,
-) : UTSObject()
-
-open class DashboardInsight(
-    @JsonNotNull
-    open var show: Boolean = false,
-    @JsonNotNull
-    open var level: InsightLevel,
-    @JsonNotNull
-    open var title: String,
-    @JsonNotNull
-    open var message: String,
-) : UTSObject()
-
-open class TimelineCourse(
-    @JsonNotNull
-    open var time: String,
-    @JsonNotNull
-    open var name: String,
-) : UTSObject()
-
-open class DashboardTimeline(
-    @JsonNotNull
-    open var targetSleepTime: String,
-    @JsonNotNull
-    open var offset: String,
-    @JsonNotNull
-    open var courses: UTSArray<TimelineCourse>,
-) : UTSObject()
-
-open class DashboardRawStats(
-    @JsonNotNull
-    open var sleepDurationStr: String,
-    @JsonNotNull
-    open var steps: Number,
-    @JsonNotNull
-    open var targetSteps: Number,
-    @JsonNotNull
-    open var focusRate: Number,
-    @JsonNotNull
-    open var distractionMins: Number,
-) : UTSObject()
-
-open class DashboardInsightResponse(
-    @JsonNotNull
-    open var currentMode: AppMode,
-    @JsonNotNull
-    open var overallScore: Number,
-    @JsonNotNull
-    open var factors: DashboardFactors,
-    @JsonNotNull
-    open var actionableInsight: DashboardInsight,
-    @JsonNotNull
-    open var timeline: DashboardTimeline,
-    @JsonNotNull
-    open var rawStats: DashboardRawStats,
 ) : UTSObject()
 
 fun parseUTSResponse(data: String): UTSJSONObject {
@@ -230,6 +163,15 @@ open class Core {
                     semester,
                     courseName
                 ).toJSONString()
+            )
+            return@w parseUTSResponse(data)
+        })
+    }
+
+    public open fun getAllExam(): UTSPromise<UTSJSONObject> {
+        return wrapUTSPromise(suspend w@{
+            val data = await(
+                Manager.getWebService().getAllExam(UTSAndroid.getAppContext()!!).toJSONString()
             )
             return@w parseUTSResponse(data)
         })
@@ -363,40 +305,6 @@ open class Core {
         Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!).setSmartUpdate(isSmart)
     }
 
-    public open fun checkRecordAudio(): Boolean {
-        return Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!).checkRecordAudio()
-    }
-
-    public open fun requestRecordAudio(): UTSPromise<Boolean> {
-        return UTSPromise(fun(resolve, reject) {
-            Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-                .requestRecordAudio(fun(isGranted: Boolean) {
-                    if (isGranted) {
-                        resolve(true)
-                    } else {
-                        reject(false)
-                    }
-                }
-                )
-        }
-        )
-    }
-
-    public open fun requestKeepAliveNormalPermissions(): UTSPromise<UTSArray<String>> {
-        return UTSPromise(fun(resolve, reject) {
-            Manager.getPermissionsManager(UTSAndroid.getUniActivity()!!)
-                .requestKeepAliveNormalPermissions(fun(isGranted: Boolean, list: List<String>) {
-                    if (isGranted) {
-                        resolve(UTSArray<String>())
-                    } else {
-                        reject(UTSArray.fromNative(list))
-                    }
-                }
-                )
-        }
-        )
-    }
-
     public open fun initYiBan(mobile: String, password: String): UTSPromise<UTSJSONObject> {
         return wrapUTSPromise(suspend w@{
             val data = await(
@@ -404,44 +312,6 @@ open class Core {
                     .toJSONString()
             )
             return@w parseUTSResponse(data)
-        })
-    }
-
-    public open fun switchAppMode(mode: String) {
-    }
-
-    public open fun getDashboardInsight(): UTSPromise<DashboardInsightResponse> {
-        return wrapUTSPromise(suspend w@{
-
-        })
-    }
-
-    public open fun getWakeUpConfigData(): UTSJSONObject {
-
-        return object : UTSJSONObject() {
-
-        }
-    }
-
-    public open fun getAlarmStatusAsync(): UTSPromise<UTSJSONObject?> {
-        return wrapUTSPromise(suspend w@{
-            try {
-
-            } catch (e: Throwable) {
-                console.error("Failed to get alarm status", e)
-            }
-            return@w null
-        })
-    }
-
-    public open fun requestSetAlarmAsync(): UTSPromise<UTSJSONObject?> {
-        return wrapUTSPromise(suspend w@{
-            try {
-
-            } catch (e: Throwable) {
-                console.error("Failed to request set alarm", e)
-            }
-            return@w null
         })
     }
 }
@@ -514,6 +384,10 @@ open class CoreByJs : Core {
         courseName: String
     ): Deferred<UTSJSONObject> {
         return toDeferred(this.getSorcesDetail(classId, schoolYear, semester, courseName))
+    }
+
+    public open suspend fun getAllExamByJs(): Deferred<UTSJSONObject> {
+        return toDeferred(this.getAllExam())
     }
 
     public open suspend fun getAcademicProgressByJs(refresh: Boolean): Deferred<UTSJSONObject> {
@@ -620,44 +494,10 @@ open class CoreByJs : Core {
         return this.setSmartUpdate(isSmart)
     }
 
-    public open fun checkRecordAudioByJs(): Boolean {
-        return this.checkRecordAudio()
-    }
-
-    public open suspend fun requestRecordAudioByJs(): Deferred<Boolean> {
-        return toDeferred(this.requestRecordAudio())
-    }
-
-
-    public open suspend fun requestKeepAliveNormalPermissionsByJs(): Deferred<UTSArray<String>> {
-        return toDeferred(this.requestKeepAliveNormalPermissions())
-    }
-
-
     public open suspend fun initYiBanByJs(
         mobile: String,
         password: String
     ): Deferred<UTSJSONObject> {
         return toDeferred(this.initYiBan(mobile, password))
-    }
-
-    public open fun switchAppModeByJs(mode: String) {
-        return this.switchAppMode(mode)
-    }
-
-    public open suspend fun getDashboardInsightByJs(): Deferred<DashboardInsightResponse> {
-        return toDeferred(this.getDashboardInsight())
-    }
-
-    public open fun getWakeUpConfigDataByJs(): UTSJSONObject {
-        return this.getWakeUpConfigData()
-    }
-
-    public open suspend fun getAlarmStatusAsyncByJs(): Deferred<UTSJSONObject?> {
-        return toDeferred(this.getAlarmStatusAsync())
-    }
-
-    public open suspend fun requestSetAlarmAsyncByJs(): Deferred<UTSJSONObject?> {
-        return toDeferred(this.requestSetAlarmAsync())
     }
 }

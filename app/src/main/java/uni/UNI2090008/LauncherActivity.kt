@@ -1,8 +1,11 @@
 package uni.UNI2090008
 
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.os.Bundle
 import com.feifan.fuckingnjit.utils.CoreInitializer
+import com.feifan.fuckingnjit.widget.CurriculumsWidgetProvider
 import com.umeng.commonsdk.UMConfigure
 import io.dcloud.PandoraEntryActivity
 
@@ -18,6 +21,14 @@ class LauncherActivity : PandoraEntryActivity() {
             UMConfigure.DEVICE_TYPE_PHONE,
             ""
         )
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        val componentName = ComponentName(this, CurriculumsWidgetProvider::class.java)
+        val hasWidgets = appWidgetManager.getAppWidgetIds(componentName).isNotEmpty()
+
+        if (hasWidgets) {
+            println("1111")
+            CurriculumsWidgetProvider.pingEngine(this, force = false)
+        }
         super.onCreate(savedInstanceState)
     }
 }

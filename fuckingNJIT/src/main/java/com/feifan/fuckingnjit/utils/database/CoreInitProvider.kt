@@ -8,7 +8,15 @@ class CoreInitProvider : Initializer<Unit> {
     override fun create(context: Context) {
         // 在这里执行初始化操作
         AppDataCenter.init(context)
-//        TestCourseGenerator.generateAndSave()
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                // 这个方法内部包含了 AppDataCenter.saveUser 和 rsaEncrypt
+//                TestCourseGenerator.generateAndSave()
+//                Log.i("Init", "后台测试数据生成完毕")
+//            } catch (e: Exception) {
+//                Log.e("Init", "数据生成失败", e)
+//            }
+//        }
         // 用于清空数据库的例子
 //        AppDataCenter.getBoxStore()?.let { store ->
 //            DbClearHelper.checkAndClear(context, store, "core_db_v1.0.0")

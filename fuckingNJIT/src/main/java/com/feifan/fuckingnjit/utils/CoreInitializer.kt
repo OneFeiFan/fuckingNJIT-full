@@ -29,17 +29,13 @@ object CoreInitializer {
     fun init() {
         try {
             Log.i("CoreInitializer", "Initializing Core")
-//            coroutineScope.launch {
             // 获取开学时间
             val startMs = AppDataCenter.getSystemConfig().semesterStartDateMs
 
             if (startMs > 0L) {
                 val week = EduScheduleConfig.calculateCurrentWeek(startMs) // 计算当前周
-//                    withContext(Dispatchers.IO) {
                 AppDataCenter.updateSystemConfig { it.currentWeek = week }
-//                    }
             }
-//            }
         } catch (e: Exception) {
             println("init error: ${e.message}")
         }

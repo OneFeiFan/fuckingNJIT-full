@@ -580,6 +580,47 @@ class WebServiceImpl private constructor() : WebService {
         }
     }
 
+    // 考试信息
+    suspend fun getAllExam(context: Context): JSONObject {
+        val url = buildUrl(
+            "/jwglxt/kwgl/kscx_cxXsksxxIndex.html",
+            "doType" to "query",
+            "gnmkdm" to "N358105",
+            "_search" to "false",
+            "nd" to System.currentTimeMillis().toString(),
+            "queryModel.showCount" to "500",
+            "queryModel.currentPage" to "1",
+            "queryModel.sortName" to "+",
+            "queryModel.sortOrder" to "desc",
+            "time" to "1"
+        )
+
+        var raw: String
+        try {
+            raw = HttpRequestHelper.getJsonResponse(url, HttpMethod.GET)
+        } catch (e: ApiException) {
+            // 拦截网络/认证异常
+            // 如果底层未授权，就在这里调起 UI
+            if (e.status == NetworkStatus.Unauthorized) {
+                SystemActionHelper.showToast(context, "登录已失效，请重新登录")
+                SystemActionHelper.startLogin(context, true)
+            } else {
+                // 其他网络错误（如 404, 500），弹一个普通 Toast 告知用户
+                SystemActionHelper.showToast(context, e.message)
+            }
+            return JSONObject()
+        } catch (e: Exception) {
+            SystemActionHelper.handleException(context, e, "获取考试信息失败")
+            return NetworkStatus.UnknownError.toJsonResult()
+        }
+
+        if (raw.isEmpty()) {
+            return NetworkStatus.NotFound.toJsonResult()
+        }
+
+        return NetworkStatus.Success.toJsonResult(JSONObject.parseObject(raw))
+    }
+
     fun saveCourse(context: Context, courseJson: String, hideRule: String?): JSONObject {
         try {
             // 1. 如果有 hideId (说明是修改系统课程)，先隐藏原课程
