@@ -17,13 +17,13 @@ import com.feifan.fuckingnjit.utils.DailyCourseSlot
 import com.feifan.fuckingnjit.utils.EduScheduleConfig
 import com.feifan.fuckingnjit.utils.HeartbeatBus
 import com.feifan.fuckingnjit.utils.TodayScheduleManager
+import com.feifan.fuckingnjit.widget.CurriculumsWidgetProvider.Companion.TAG
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-
 /**
  * 课程表桌面小部件 Provider
  *
@@ -31,7 +31,6 @@ import java.util.Locale
  * 通过全局心跳广播和下课时间节点注册机制实现自动刷新。
  */
 class CurriculumsWidgetProvider : AppWidgetProvider() {
-
     companion object {
         private val TAG = "CurriculumsWidgetProvider"
         private val CHINA_DATE_FORMATTER = DateTimeFormatter.ofPattern("M.d hh:mm a", Locale.CHINA)
@@ -53,30 +52,6 @@ class CurriculumsWidgetProvider : AppWidgetProvider() {
         )
         private val IDS_TIME =
             intArrayOf(R.id.time_id_1, R.id.time_id_2, R.id.time_id_3, R.id.time_id_4)
-
-        /**
-         * 负责向 CoreService 发送点火指令
-         * @param force
-         * true  -> 无视状态强行投递指令（用于系统心跳滴答，触发 onStartCommand）
-         * false -> 仅在服务死亡时拉起服务（用于手动刷新时的兜底检测）
-         */
-        fun pingEngine(context: Context, force: Boolean) {
-            // 如果是按需拉起，且服务本来就活着，直接 return，不产生任何性能开销
-            if (!force && CoreService.isRunning) {
-                Log.i(TAG, "检测到 CoreService 健康运行中，跳过按需拉起。")
-                return
-            }
-
-            val serviceIntent = Intent(context, CoreService::class.java).apply {
-                action = HeartbeatBus.ACTION_GLOBAL_TICK
-            }
-
-            try {
-                context.startForegroundService(serviceIntent)
-            } catch (e: Exception) {
-                Log.e(TAG, "引擎点火失败", e)
-            }
-        }
     }
 
     /**
@@ -194,7 +169,7 @@ class CurriculumsWidgetProvider : AppWidgetProvider() {
                     onUpdate(context, appWidgetManager, extrasIds)
                 }
 
-                pingEngine(context, force = false)
+                Engine.pingEngine(context, force = false)
             }
         }
 
@@ -207,7 +182,7 @@ class CurriculumsWidgetProvider : AppWidgetProvider() {
             }
 
             // 必须强行传递下去，触发 onStartCommand，以确保下一次闹钟被注册！
-            pingEngine(context, force = true)
+            Engine.pingEngine(context, force = true)
         }
     }
 

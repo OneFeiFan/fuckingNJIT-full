@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.os.Bundle
 import com.feifan.fuckingnjit.utils.CoreInitializer
 import com.feifan.fuckingnjit.widget.CurriculumsWidgetProvider
+import com.feifan.fuckingnjit.widget.Engine
 import com.umeng.commonsdk.UMConfigure
 import io.dcloud.PandoraEntryActivity
 
@@ -26,8 +27,7 @@ class LauncherActivity : PandoraEntryActivity() {
         val hasWidgets = appWidgetManager.getAppWidgetIds(componentName).isNotEmpty()
 
         if (hasWidgets) {
-            println("1111")
-            CurriculumsWidgetProvider.pingEngine(this, force = false)
+            Engine.pingEngine(this, force = false)
         }
         super.onCreate(savedInstanceState)
     }

@@ -17,7 +17,12 @@
 
 -keep class com.feifan.fuckingnjit.utils.** { *; }
 -keep class com.feifan.fuckingnjit.model.** { *; }
-#-keep class com.feifan.fuckingnjit.** { *; }
+
+-keep class com.feifan.fuckingnjit.widget.Engine
+
+-keep class com.feifan.fuckingnjit.widget.Engine {
+    *;
+}
 
 -keep class kotlin.** { *; }
 
