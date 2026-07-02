@@ -15,6 +15,8 @@ import io.objectbox.converter.PropertyConverter
  *
  * 存储用户在教务系统和易班的账号凭据、学业数据以及应用运行模式偏好。
  * 密码字段均经过 RSA 加密后存储。
+ *
+ * @param customSemesterStartDateMs 用户自定义的学期开始时间戳（毫秒），值为 0 时表示未设置，将使用全局默认值
  */
 @Entity
 data class User(
@@ -37,7 +39,8 @@ data class User(
     @Convert(converter = JSONObjectConverter::class, dbType = String::class)
     var curriculums: JSONObject = JSONObject(),
     @Convert(converter = JSONObjectConverter::class, dbType = String::class)
-    var localCurriculums: JSONObject? = JSONObject()
+    var localCurriculums: JSONObject? = JSONObject(),
+    var customSemesterStartDateMs: Long = 0L
 )
 
 /**

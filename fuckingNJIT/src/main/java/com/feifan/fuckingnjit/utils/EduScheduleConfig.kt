@@ -32,6 +32,7 @@ object EduScheduleConfig {
         9 to "19:15", 10 to "20:10", 11 to "21:05"
     )
 
+
     /**
      * 根据开始节次和持续节次生成显示用的课程时间段文本
      *
@@ -82,9 +83,11 @@ object EduScheduleConfig {
         }
     }
 
-    /** 获取当前学期的开始日期字符串 */
+    /** 获取当前学期开始日期字符串（用户自定义优先） */
     fun getSemesterStartDate(): String {
-        val dateMs = AppDataCenter.getSystemConfig().semesterStartDateMs
+        // 用户自定义开学日期优先
+        val customMs = AppDataCenter.getCurrentUser()?.customSemesterStartDateMs ?: 0L
+        val dateMs = if (customMs > 0L) customMs else AppDataCenter.getSystemConfig().semesterStartDateMs
         return try {
             if (dateMs != 0L) {
                 Instant.ofEpochMilli(dateMs).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -125,22 +128,35 @@ object EduScheduleConfig {
     }
 
     /**
-     * 计算当前学年学期标识符
+     * 计算当前学年学期标识符。
      *
-     * 返回格式为 "起始年-结束年-学期码"，其中学期码 3 表示第一学期、12 表示第二学期。
-     * 注意：该实现为简化版本，边界判断不够精确。
+     * 若用户设置了自定义学期分界日期且当前尚未到达该日期，
+     * 则在原有硬编码计算结果基础上回退一个学期。
      *
      * @return 如 "2024-2025-3" 的学年学期字符串
      */
     fun getCurrentSchoolYear(): String {
+        // 用户自定义优先，否则用全局
+        val customMs = AppDataCenter.getCurrentUser()?.customSemesterStartDateMs ?: 0L
+        val effectiveMs = if (customMs > 0L) customMs else AppDataCenter.getSystemConfig().semesterStartDateMs
+
+        // 从生效日期推导学年学期
+        if (effectiveMs > 0L) {
+            val startDate = Instant.ofEpochMilli(effectiveMs).atZone(ZoneId.systemDefault()).toLocalDate()
+            val sm = startDate.monthValue
+            val sy = startDate.year
+            return if (sm >= 7) "${sy}-${sy + 1}-3" else "${sy - 1}-${sy}-12"
+        }
+
+        // 兜底：原有硬编码逻辑
         val today = LocalDate.now()
         val month = today.monthValue
         val year = today.year
         val day = today.dayOfMonth
 
-        val schoolYearStart: Int
-        val schoolYearEnd: Int
-        val semester: Int
+        var schoolYearStart: Int
+        var schoolYearEnd: Int
+        var semester: Int
 
         if (month >= 7) {
             schoolYearStart = year

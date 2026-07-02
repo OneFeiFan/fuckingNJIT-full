@@ -562,17 +562,26 @@ class WebServiceImpl private constructor() : WebService {
     fun getDate(context: Context): String {
         try {
             val result = JSONObject()
-            val dateMs = AppDataCenter.getSystemConfig().semesterStartDateMs
-            if (dateMs != 0L) {
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                result["startDate"] = Instant.ofEpochMilli(dateMs)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                    .format(formatter)
+
+            // 使用 EduScheduleConfig 统一获取（自动处理用户自定义优先）
+            val startDateStr = EduScheduleConfig.getSemesterStartDate()
+            result["startDate"] = startDateStr
+
+            val currentWeek = TodayScheduleManager.getCurrentWeek()
+            result["currentWeek"] = currentWeek
+
+            // 自定义日期标记
+            val isCustom = (AppDataCenter.getCurrentUser()?.customSemesterStartDateMs ?: 0L) > 0L
+            result["isCustom"] = isCustom
+
+            // 超过 19 周提醒用户更新开学时间
+            if (currentWeek > 19) {
+                result["needUpdate"] = true
+                SystemActionHelper.showToast(context, "当前周次已超过19周，请更新开学时间")
             } else {
-                result["startDate"] = "2025-02-17"
+                result["needUpdate"] = false
             }
-            result["currentWeek"] = TodayScheduleManager.getCurrentWeek()
+
             return result.toJSONString()
         } catch (e: Exception) {
             SystemActionHelper.handleException(context, e, "时间获取失败：getDate")
