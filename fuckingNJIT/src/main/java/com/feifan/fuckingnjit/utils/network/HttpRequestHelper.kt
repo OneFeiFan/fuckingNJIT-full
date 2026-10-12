@@ -45,9 +45,10 @@ class HttpRequestHelper {
                 .build()
         }
         private val cookieManager: CookieManager = CookieManager.getInstance()
-        const val BASE_URL = "https://casb.njit.edu.cn"
+        const val BASE_URL = ""
         const val WEBVPN_PATH =
-            "/http/webvpn3e1a11b7208e283ab07ade5d2913fc13d6f6fe09d2dc7372db2a51a14aa4167a"
+            ""
+        // 清除真实地址
         val COMMON_HEADERS = mapOf(
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
             "Accept" to "*/*",
